@@ -15,6 +15,7 @@ add_executable(
     src/input.c
     src/entity.c
     src/bounding_box.c
+    src/gui.c
     deps/glad/src/glad.c
     deps/lodepng/lodepng.c
 )

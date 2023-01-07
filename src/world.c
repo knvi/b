@@ -117,18 +117,19 @@ void world_init(world *w)
     w->placing_block = 0;
     w->camera_rotation = (vec2) {0.0f};
 
-    w->blocks_program = load_program("res/shaders/blocks.vsh", "res/shaders/blocks.fsh");
-    w->blocks_position_location = glGetAttribLocation(w->blocks_program, "position");
-    w->blocks_normal_location = glGetAttribLocation(w->blocks_program, "normal");
-    w->blocks_tex_coord_location = glGetAttribLocation(w->blocks_program, "texCoord");
-    w->blocks_model_location = glGetUniformLocation(w->blocks_program, "model");
-    w->blocks_view_location = glGetUniformLocation(w->blocks_program, "view");
-    w->blocks_projection_location = glGetUniformLocation(w->blocks_program, "projection");
+    w->blocks_shader.program = load_program("res/shaders/blocks.vsh", "res/shaders/blocks.fsh");
+    w->blocks_shader.position_location = glGetAttribLocation(w->blocks_shader.program, "position");
+    w->blocks_shader.normal_location = glGetAttribLocation(w->blocks_shader.program, "normal");
+    w->blocks_shader.tex_coord_location = glGetAttribLocation(w->blocks_shader.program, "tex_coord");
+    w->blocks_shader.model_location = glGetUniformLocation(w->blocks_shader.program, "model");
+    w->blocks_shader.view_location = glGetUniformLocation(w->blocks_shader.program, "view");
+    w->blocks_shader.projection_location = glGetUniformLocation(w->blocks_shader.program, "projection");
+    w->blocks_shader.texture_location = glGetUniformLocation(w->blocks_shader.program, "blocks_texture");
 
-    w->lines_program = load_program("res/shaders/lines.vsh", "res/shaders/lines.fsh");
-    w->lines_position_location = glGetAttribLocation(w->lines_program, "position");
-    w->lines_view_location = glGetUniformLocation(w->lines_program, "view");
-    w->lines_projection_location = glGetUniformLocation(w->lines_program, "projection");
+    w->lines_shader.program = load_program("res/shaders/lines.vsh", "res/shaders/lines.fsh");
+    w->lines_shader.position_location = glGetAttribLocation(w->lines_shader.program, "position");
+    w->lines_shader.view_location = glGetUniformLocation(w->lines_shader.program, "view");
+    w->lines_shader.projection_location = glGetUniformLocation(w->lines_shader.program, "projection");
 
     w->chunk_data_buffer = malloc(36 * CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT * sizeof(block_vertex));
 
@@ -138,16 +139,7 @@ void world_init(world *w)
     {
         for (int z = 0; z < WORLD_SIZE; z++)
         {
-            chunk_init(&w->chunks[x * WORLD_SIZE + z], x - WORLD_SIZE / 2, z - WORLD_SIZE / 2, w->blocks_position_location, w->blocks_normal_location, w->blocks_tex_coord_location);
-        }
-    }
-
-    for (int x = 0; x < WORLD_SIZE; x++)
-    {
-        for (int z = 0; z < WORLD_SIZE; z++)
-        {
-            glBindBuffer(GL_ARRAY_BUFFER, w->chunks[x * WORLD_SIZE + z].buffer);
-            chunk_build_buffer(&w->chunks[x * WORLD_SIZE + z], w, w->chunk_data_buffer);
+            chunk_init(&w->chunks[x * WORLD_SIZE + z], x - WORLD_SIZE / 2, z - WORLD_SIZE / 2, &w->blocks_shader);
         }
     }
 
@@ -163,13 +155,16 @@ void world_init(world *w)
 
     glGenBuffers(1, &w->selection_box_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, w->selection_box_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 24, NULL, GL_STREAM_DRAW);
-    glVertexAttribPointer(w->lines_position_location, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, NULL);
-    glEnableVertexAttribArray(w->lines_position_location);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 24, NULL, GL_STREAM_DRAW);
+    glVertexAttribPointer(w->lines_shader.position_location, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), NULL);
+    glEnableVertexAttribArray(w->lines_shader.position_location);
 }
 
 void world_handle_input(world *w, input *i)
 {
+    w->window_width = i->window_width;
+    w->window_height = i->window_height;
+
     if (i->mouse_locked)
     {
         w->camera_rotation.x += i->mouse_delta.y * i->mouse_sensitivity;
@@ -210,8 +205,9 @@ void world_handle_input(world *w, input *i)
 
         if (i->scroll_delta != 0.0)
         {
-            w->selected_block += i->scroll_delta;
-            printf("Selected block of ID %d\n", w->selected_block);
+            w->selected_block -= i->scroll_delta;
+            if (w->selected_block == 0) w->selected_block = 3 * 9;
+            if (w->selected_block == 3 * 9 + 1) w->selected_block = 1;
         }
 
         if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_LEFT])
@@ -243,14 +239,15 @@ void world_tick(world *w)
             world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, AIR);
         }
         if (w->placing_block)
-        {   
+        {
             vec3 position = {w->selected_block_x + w->selected_face_x, w->selected_block_y + w->selected_face_y - 0.5f, w->selected_block_z + w->selected_face_z};
             bounding_box_update(&block_box, &position);
-            if(!is_colliding(&block_box, &w->player.box)) {
+            if (!is_colliding(&block_box, &w->player.box))
+            {
                 world_set_block(w,
-                w->selected_block_x + w->selected_face_x,
-                w->selected_block_y + w->selected_face_y,
-                w->selected_block_z + w->selected_face_z, w->selected_block);
+                    w->selected_block_x + w->selected_face_x,
+                    w->selected_block_y + w->selected_face_y,
+                    w->selected_block_z + w->selected_face_z, w->selected_block);
             }
         }
     }
@@ -301,24 +298,54 @@ void world_draw(world *w, double delta_time)
     glClearColor(0.6f, 0.7f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mat4 temp;
-
     vec3 view_translation;
     multiply_v3f(&view_translation, &w->camera_position, -1.0f);
     translate(&w->world_view, &view_translation);
-    static vec3 axis_up = {0.0f, 1.0f, 0.0f};
-    static vec3 axis_right = {1.0f, 0.0f, 0.0f};
-    rotate(&temp, &axis_up, RADIANS(w->camera_rotation.y));
-    multiply(&w->world_view, &temp, &w->world_view);
-    rotate(&temp, &axis_right, RADIANS(w->camera_rotation.x));
-    multiply(&w->world_view, &temp, &w->world_view);
+    rotate(&TEMP_MAT, &AXIS_UP, RADIANS(w->camera_rotation.y));
+    multiply(&w->world_view, &TEMP_MAT, &w->world_view);
+    rotate(&TEMP_MAT, &AXIS_RIGHT, RADIANS(w->camera_rotation.x));
+    multiply(&w->world_view, &TEMP_MAT, &w->world_view);
 
     perspective(&w->world_projection, 85.0f, w->window_width / w->window_height, 0.05f, 1000.0f);
 
-    glUseProgram(w->blocks_program);
+    glUseProgram(w->blocks_shader.program);
+    glUniform1i(w->blocks_shader.texture_location, 0);
 
-    glUniformMatrix4fv(w->blocks_projection_location, 1, GL_FALSE, w->world_projection.value);
-    glUniformMatrix4fv(w->blocks_view_location, 1, GL_FALSE, w->world_view.value);
+    glUniformMatrix4fv(w->blocks_shader.projection_location, 1, GL_FALSE, w->world_projection.value);
+    glUniformMatrix4fv(w->blocks_shader.view_location, 1, GL_FALSE, w->world_view.value);
+
+    for (int i = 0; i < 4; i++)
+    {
+        chunk *chunk_to_update = NULL;
+        float min_distance = -1.0f;
+
+        for (int x = 0; x < WORLD_SIZE; x++)
+        {
+            for (int z = 0; z < WORLD_SIZE; z++)
+            {
+                chunk *c = &w->chunks[x * WORLD_SIZE + z];
+
+                if (c->dirty)
+                {
+                    float distance_x = abs(x - CHUNK_FROM_WORLD_COORDS((int) roundf(w->player.position.x)));
+                    float distance_z = abs(z - CHUNK_FROM_WORLD_COORDS((int) roundf(w->player.position.z)));
+                    float distance = sqrtf(distance_x * distance_x + distance_z * distance_z);
+                    if (distance < min_distance || min_distance < 0.0f)
+                    {
+                        min_distance = distance;
+                        chunk_to_update = c;
+                    }
+                }
+            }
+        }
+
+        if (chunk_to_update)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, chunk_to_update->vbo);
+            chunk_build_buffer(chunk_to_update, w, w->chunk_data_buffer);
+        }
+        else break;
+    }
 
     for (int x = -WORLD_SIZE / 2; x < WORLD_SIZE - WORLD_SIZE / 2; x++)
     {
@@ -327,12 +354,7 @@ void world_draw(world *w, double delta_time)
             chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
             vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
             translate(&w->blocks_model, &chunk_translation);
-            glUniformMatrix4fv(w->blocks_model_location, 1, GL_FALSE, w->blocks_model.value);
-            if (c->dirty)
-            {
-                glBindBuffer(GL_ARRAY_BUFFER, c->buffer);
-                chunk_build_buffer(c, w, w->chunk_data_buffer);
-            }
+            glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
             glBindVertexArray(c->vao);
             glDrawArrays(GL_TRIANGLES, 0, c->vert_count);
         }
@@ -340,10 +362,12 @@ void world_draw(world *w, double delta_time)
 
     if (w->block_in_range)
     {
-        glUseProgram(w->lines_program);
+        glUseProgram(w->lines_shader.program);
 
-        glUniformMatrix4fv(w->lines_projection_location, 1, GL_FALSE, w->world_projection.value);
-        glUniformMatrix4fv(w->lines_view_location, 1, GL_FALSE, w->world_view.value);
+        glUniformMatrix4fv(w->lines_shader.projection_location, 1, GL_FALSE, w->world_projection.value);
+        glUniformMatrix4fv(w->lines_shader.view_location, 1, GL_FALSE, w->world_view.value);        
+
+        
 
         vec3 data[24];
         make_selection_box(data, w->selected_block_x, w->selected_block_y, w->selected_block_z);
@@ -372,7 +396,7 @@ void world_destroy(world *w)
     glDeleteVertexArrays(1, &w->selection_box_vao);   
 
     glDeleteTextures(1, &w->blocks_texture);
-    glDeleteProgram(w->blocks_program);
+    glDeleteProgram(w->blocks_shader.program);
 }
 
 block_id world_get_block(world *w, int x, int y, int z)

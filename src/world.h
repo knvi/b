@@ -3,9 +3,10 @@
 
 #include "chunk.h"
 #include "entity.h"
+#include "shader.h"
 #include "input.h"
 
-#define WORLD_SIZE 4
+#define WORLD_SIZE 32
 
 #define WORLD_TO_CHUNK(x) (x < 0 ? x % CHUNK_SIZE == 0 ? 0 : CHUNK_SIZE + x % CHUNK_SIZE : x % CHUNK_SIZE)
 #define CHUNK_FROM_WORLD_COORDS(x) ((x / CHUNK_SIZE < 0 ? x + 1 : x) / CHUNK_SIZE + WORLD_SIZE / 2 - (x < 0 ? 1 : 0))
@@ -38,18 +39,9 @@ typedef struct
     mat4 world_projection;
 
     GLuint blocks_texture;
-    GLuint blocks_program;
-    GLuint blocks_position_location;
-    GLuint blocks_normal_location;
-    GLuint blocks_tex_coord_location;
-    GLuint blocks_model_location;
-    GLuint blocks_view_location;
-    GLuint blocks_projection_location;
+    shader blocks_shader;
 
-    GLuint lines_program;
-    GLuint lines_position_location;
-    GLuint lines_view_location;
-    GLuint lines_projection_location;
+    shader lines_shader;
     
     GLuint selection_box_vao;
     GLuint selection_box_buffer;
