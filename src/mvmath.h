@@ -49,4 +49,7 @@ void frustum(mat4 *m, float left, float right, float bottom, float top, float zn
 void perspective(mat4 *m, float fov, float aspect, float znear, float zfar);
 void ortho(mat4 *m, float left, float right, float bottom, float top, float near, float far);
 
+float lerp(float a, float b, float t);
+void v3_lerp(vec3 *v, vec3 *a, vec3 *b, float t);
+
 #endif

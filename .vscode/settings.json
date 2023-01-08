@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "glfw3.h": "c",
-        "block.h": "c"
+        "block.h": "c",
+        "winsock2.h": "c",
+        "ws2tcpip.h": "c"
     }
 }

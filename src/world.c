@@ -1,6 +1,7 @@
 #include "world.h"
 
 #include "util.h"
+#include "block_data.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -107,7 +108,7 @@ void calculate_selected_block(world *w, float radius)
 void world_init(world *w)
 {
     w->player.box = (bounding_box) {{0.6f, 1.8f, 0.6f}};
-    w->player.position = (vec3) {0.0f, 100.5f, 0.0f};
+    w->player.position = (vec3) {0.0f, WORLD_HEIGHT, 0.0f};
     w->player.velocity = (vec3) {0.0f};
     w->player.move_direction = (vec3) {0.0f};
     w->player.jumping = 0;
@@ -150,14 +151,51 @@ void world_init(world *w)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     load_png_texture("res/textures/terrain.png");
 
-    glGenVertexArrays(1, &w->selection_box_vao);
-    glBindVertexArray(w->selection_box_vao);
+    glGenVertexArrays(1, &w->frame_vao);
+    glBindVertexArray(w->frame_vao);
 
-    glGenBuffers(1, &w->selection_box_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, w->selection_box_buffer);
+    glGenBuffers(1, &w->frame_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, w->frame_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 24, NULL, GL_STREAM_DRAW);
     glVertexAttribPointer(w->lines_shader.position_location, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), NULL);
     glEnableVertexAttribArray(w->lines_shader.position_location);
+
+    w->num_players = 0;
+}
+
+void world_generate(world *w)
+{
+    static const int GRASS_LEVEL = 40;
+
+    for (int x = 0; x < WORLD_SIZE; x++)
+    {
+        for (int z = 0; z < WORLD_SIZE; z++)
+        {
+            chunk *c = &w->chunks[x * WORLD_SIZE + z];
+
+            for (int x = 0; x < CHUNK_SIZE; x++)
+            {
+                for (int y = 0; y < WORLD_HEIGHT; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        if (y > GRASS_LEVEL)
+                            c->blocks[x][y][z] = AIR;
+                        else if (y == GRASS_LEVEL)
+                            c->blocks[x][y][z] = GRASS;
+                        else if (y == 0)
+                            c->blocks[x][y][z] = BEDROCK;
+                        else if (y < 25)
+                            c->blocks[x][y][z] = STONE;
+                        else if (y < GRASS_LEVEL)
+                            c->blocks[x][y][z] = DIRT;
+                    }
+                }
+            }
+
+            c->dirty = 1;
+        }
+    }
 }
 
 void world_handle_input(world *w, input *i)
@@ -203,12 +241,13 @@ void world_handle_input(world *w, input *i)
             normalize(&w->player.move_direction);
         }
 
-        if (i->scroll_delta != 0.0)
-        {
-            w->selected_block -= i->scroll_delta;
-            if (w->selected_block == 0) w->selected_block = 3 * 9;
-            if (w->selected_block == 3 * 9 + 1) w->selected_block = 1;
+        if(i->scroll_delta < 0.0) {
+            w->selected_block++;
+        } else if (i->scroll_delta > 0.0) {
+            w->selected_block--;
         }
+        if(w->selected_block == 0) w->selected_block = 3*9;
+        else if(w->selected_block == 3*9+1) w->selected_block = 1;
 
         if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_LEFT])
         {
@@ -232,22 +271,29 @@ void world_tick(world *w)
     w->player.velocity.x *= w->player.on_ground ? 0.6f : 0.91f;
     w->player.velocity.z *= w->player.on_ground ? 0.6f : 0.91f;
 
+    w->block_changed = 0;
     if (w->block_in_range)
     {
         if (w->destroying_block)
         {
             world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, AIR);
+            w->block_changed = 1;
+            w->new_block = AIR;
         }
         if (w->placing_block)
         {
-            vec3 position = {w->selected_block_x + w->selected_face_x, w->selected_block_y + w->selected_face_y - 0.5f, w->selected_block_z + w->selected_face_z};
+            w->selected_block_x += w->selected_face_x;
+            w->selected_block_y += w->selected_face_y;
+            w->selected_block_z += w->selected_face_z;
+
+            vec3 position = {w->selected_block_x, w->selected_block_y - 0.5f, w->selected_block_z};
             bounding_box_update(&block_box, &position);
+
             if (!is_colliding(&block_box, &w->player.box))
             {
-                world_set_block(w,
-                    w->selected_block_x + w->selected_face_x,
-                    w->selected_block_y + w->selected_face_y,
-                    w->selected_block_z + w->selected_face_z, w->selected_block);
+                world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, w->selected_block);
+                w->block_changed = 1;
+                w->new_block = w->selected_block;
             }
         }
     }
@@ -259,7 +305,7 @@ void world_tick(world *w)
     add_v3(&w->player.velocity, &w->player.velocity, &velocity_change);
 }
 
-void world_draw(world *w, double delta_time)
+void world_draw(world *w, double delta_time, double time_since_tick)
 {
     double tick_delta_time = delta_time * 20.0f;
 
@@ -360,22 +406,53 @@ void world_draw(world *w, double delta_time)
         }
     }
 
+    glUseProgram(w->lines_shader.program);
+
+    glUniformMatrix4fv(w->lines_shader.projection_location, 1, GL_FALSE, w->world_projection.value);
+    glUniformMatrix4fv(w->lines_shader.view_location, 1, GL_FALSE, w->world_view.value);
+
+    glBindBuffer(GL_ARRAY_BUFFER, w->frame_vbo);
+    glBindVertexArray(w->frame_vao);
+
+    vec3 data[24];
+    vec3 position;
+    vec3 prev_position;
+
+    for (int i = 0; i < w->num_players; i++)
+    {
+        position = (vec3)
+        {
+            w->players[i].x / 32.0f,
+            w->players[i].y / 32.0f + w->player.box.size.y * 0.5f,
+            w->players[i].z / 32.0f
+        };
+
+        prev_position = (vec3)
+        {
+            w->players[i].prev_x / 32.0f,
+            w->players[i].prev_y / 32.0f + w->player.box.size.y * 0.5f,
+            w->players[i].prev_z / 32.0f
+        };
+
+        v3_lerp(&position, &prev_position, &position, time_since_tick * 20.0f);
+
+        make_frame(data, &position, &w->player.box);
+
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
+        glDrawArrays(GL_LINES, 0, 24);
+    }
+
     if (w->block_in_range)
     {
-        glUseProgram(w->lines_shader.program);
+        position = (vec3)
+        {
+            w->selected_block_x,
+            w->selected_block_y,
+            w->selected_block_z
+        };
+        make_frame(data, &position, &block_box);
 
-        glUniformMatrix4fv(w->lines_shader.projection_location, 1, GL_FALSE, w->world_projection.value);
-        glUniformMatrix4fv(w->lines_shader.view_location, 1, GL_FALSE, w->world_view.value);        
-
-        
-
-        vec3 data[24];
-        make_selection_box(data, w->selected_block_x, w->selected_block_y, w->selected_block_z);
-
-        glBindBuffer(GL_ARRAY_BUFFER, w->selection_box_buffer);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
-
-        glBindVertexArray(w->selection_box_vao);
         glDrawArrays(GL_LINES, 0, 24);
     }
 }
@@ -392,8 +469,8 @@ void world_destroy(world *w)
     free(w->chunks);
     free(w->chunk_data_buffer);
 
-    glDeleteBuffers(1, &w->selection_box_buffer);
-    glDeleteVertexArrays(1, &w->selection_box_vao);   
+    glDeleteBuffers(1, &w->frame_vbo);
+    glDeleteVertexArrays(1, &w->frame_vao);
 
     glDeleteTextures(1, &w->blocks_texture);
     glDeleteProgram(w->blocks_shader.program);

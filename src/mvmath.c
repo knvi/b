@@ -157,3 +157,13 @@ void ortho(mat4 *m, float left, float right, float bottom, float top, float near
     m->value[14] = -(far + near) / (far - near);
     m->value[15] = 1;
 }
+
+float lerp(float a, float b, float t) {
+    return a + t * (b - a);
+}
+
+void v3_lerp(vec3* v, vec3 *a, vec3 *b, float t) {
+    v->x = lerp(a->x, b->x, t);
+    v->y = lerp(a->y, b->y, t);
+    v->z = lerp(a->z, b->z, t);
+}

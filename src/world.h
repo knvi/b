@@ -5,6 +5,7 @@
 #include "entity.h"
 #include "shader.h"
 #include "input.h"
+#include "sockets.h"
 
 #define WORLD_SIZE 32
 
@@ -13,12 +14,26 @@
 
 typedef struct
 {
+    short x;
+    short y;
+    short z;
+    short prev_x;
+    short prev_y;
+    short prev_z;
+    unsigned char id;
+} network_player;
+
+typedef struct
+{
     chunk *chunks;
 
     float window_width;
     float window_height;
 
+    network_player players[MAX_PLAYERS];
+    unsigned char num_players;
     entity player;
+    
     vec3 camera_position;
     vec2 camera_rotation;
     int destroying_block;
@@ -32,6 +47,9 @@ typedef struct
     int selected_face_z;
     int block_in_range;
 
+    int block_changed;
+    block_id new_block;
+
     block_vertex *chunk_data_buffer;
 
     mat4 blocks_model;
@@ -43,14 +61,15 @@ typedef struct
 
     shader lines_shader;
     
-    GLuint selection_box_vao;
-    GLuint selection_box_buffer;
+    GLuint frame_vao;
+    GLuint frame_vbo;
 } world;
 
 void world_init(world *w);
+void world_generate(world *w);
 void world_handle_input(world *w, input *i);
 void world_tick(world *w);
-void world_draw(world *w, double delta_time);
+void world_draw(world *w, double delta_time, double time_since_tick);
 void world_destroy(world *w);
 
 block_id world_get_block(world *w, int x, int y, int z);

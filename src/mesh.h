@@ -2,7 +2,7 @@
 #define MESH_H
 
 #include "mvmath.h"
-#include "block.h"
+#include "block_data.h"
 
 typedef struct
 {
@@ -12,6 +12,6 @@ typedef struct
 } block_vertex;
 
 int make_block(block_vertex *data, vec3 position, vec2 face_tex[6], block_id neighbours[6]);
-void make_selection_box(vec3 *data, int x, int y, int z);
+void make_frame(vec3 *data, vec3 *position, bounding_box* box);
 
 #endif

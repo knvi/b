@@ -1,6 +1,8 @@
 #include "game.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define FPS 120.0
@@ -38,17 +40,56 @@ int main(int argc, char **argv)
     game g;
     input i;
 
+    g.server_addr.sin_port = htons(25565);
+    g.online = 0;
+
     glfwSetWindowUserPointer(window, &i);
+
+    #ifdef _WIN32
+        WSADATA wsa_data;
+        WSAStartup(MAKEWORD(1,1), &wsa_data);
+    #endif 
+
+    if (argc / 2 >= 1)
+    {
+        for (int i = 0; i < argc; i++)
+        {
+            if (strcmp(argv[i], "--ip") == 0)
+            {
+                struct addrinfo hints, *res;
+
+                memset (&hints, 0, sizeof (hints));
+                hints.ai_family = AF_UNSPEC;
+                hints.ai_socktype = SOCK_STREAM;
+                hints.ai_protocol = IPPROTO_TCP;
+
+                if (getaddrinfo(argv[i + 1], NULL, &hints, &res) == 0)
+                {
+                    g.server_addr.sin_addr = ((struct sockaddr_in *) res->ai_addr)->sin_addr;
+                    g.online = 1;
+                }
+                else
+                {
+                    printf("Couldn't resolve the server hostname.\n");
+                }
+            }
+            else if (strcmp(argv[i], "--port") == 0)
+            {
+                g.server_addr.sin_port = htons((unsigned short) atoi(argv[i + 1]));
+            }
+        }
+    }
 
     game_init(&g, window);
     input_init(&i, window);
 
-    double last_time = 0.0;
-    double current_time = 0.0;
-    double delta_time = 0.0;
-    double tick_accumulator = 0.0;
-    const double tick_interval = 1.0 / 20.0;
+    
+    const double tick_interval  = 1.0 / 20.0;
     const double frame_interval = 1.0 / FPS;
+    double last_time            = 0.0;
+    double current_time         = 0.0;
+    double delta_time           = 0.0;
+    double tick_accumulator = tick_interval;
 
     int first_frame = 1;
 
@@ -81,7 +122,7 @@ int main(int argc, char **argv)
         game_handle_input(&g, &i);
         input_end_frame(&i);
 
-        game_draw(&g, delta_time);
+        game_draw(&g, delta_time, tick_accumulator);
 
         glfwSwapBuffers(window);
         last_time = current_time;
@@ -91,6 +132,10 @@ int main(int argc, char **argv)
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    #ifdef _WIN32
+        WSACleanup();
+    #endif
 
     return 0;
 }
