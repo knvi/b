@@ -23,15 +23,15 @@ void chunk_build_buffer(chunk *c, void *w, block_vertex *data_buffer)
             {
                 if (c->blocks[x][y][z] != AIR)
                 {
-                    neighbours[0] = world_get_block((world *) w, x + x_off, y, z + z_off + 1);
-                    neighbours[1] = world_get_block((world *) w, x + x_off, y, z + z_off - 1);
-                    neighbours[2] = world_get_block((world *) w, x + x_off + 1, y, z + z_off);
-                    neighbours[3] = world_get_block((world *) w, x + x_off - 1, y, z + z_off);
-                    neighbours[4] = world_get_block((world *) w, x + x_off, y + 1, z + z_off);
-                    neighbours[5] = world_get_block((world *) w, x + x_off, y - 1, z + z_off);
+                    neighbours[0] = world_get_block((world *)w, x + x_off, y, z + z_off + 1);
+                    neighbours[1] = world_get_block((world *)w, x + x_off, y, z + z_off - 1);
+                    neighbours[2] = world_get_block((world *)w, x + x_off + 1, y, z + z_off);
+                    neighbours[3] = world_get_block((world *)w, x + x_off - 1, y, z + z_off);
+                    neighbours[4] = world_get_block((world *)w, x + x_off, y + 1, z + z_off);
+                    neighbours[5] = world_get_block((world *)w, x + x_off, y - 1, z + z_off);
 
                     for (int i = 0; i < 6; i++)
-                        face_tex[i] = (vec2) {blocks[c->blocks[x][y][z]].face_tiles[i] % 16, blocks[c->blocks[x][y][z]].face_tiles[i] / 16};
+                        face_tex[i] = (vec2){blocks[c->blocks[x][y][z]].face_tiles[i] % 16, blocks[c->blocks[x][y][z]].face_tiles[i] / 16};
                     c->vert_count += make_block(data_buffer + c->vert_count, (vec3){x, y, z}, face_tex, neighbours);
                 }
             }
@@ -53,9 +53,9 @@ void chunk_init(chunk *c, int x, int z, shader *blocks_shader)
     glEnableVertexAttribArray(blocks_shader->position_location);
     glVertexAttribPointer(blocks_shader->position_location, 3, GL_FLOAT, GL_FALSE, sizeof(block_vertex), NULL);
     glEnableVertexAttribArray(blocks_shader->normal_location);
-    glVertexAttribPointer(blocks_shader->normal_location, 3, GL_FLOAT, GL_FALSE, sizeof(block_vertex), (GLvoid *) sizeof(vec3));
+    glVertexAttribPointer(blocks_shader->normal_location, 3, GL_FLOAT, GL_FALSE, sizeof(block_vertex), (GLvoid *)sizeof(vec3));
     glEnableVertexAttribArray(blocks_shader->tex_coord_location);
-    glVertexAttribPointer(blocks_shader->tex_coord_location, 2, GL_FLOAT, GL_FALSE, sizeof(block_vertex), (GLvoid *) (sizeof(vec3) * 2));
+    glVertexAttribPointer(blocks_shader->tex_coord_location, 2, GL_FLOAT, GL_FALSE, sizeof(block_vertex), (GLvoid *)(sizeof(vec3) * 2));
 
     c->x = x;
     c->z = z;

@@ -15,9 +15,11 @@ add_executable(
     src/gui.c
     src/game.c
     src/input.c
+    src/worldgen.c
     src/main.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c
+    deps/noise/noise1234.c
     deps/lodepng/lodepng.c)
 
 add_executable(
@@ -32,6 +34,7 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "Build example apps" FORCE)
 
 add_subdirectory(deps/glfw)
 include_directories(deps/miniz)
+include_directories(deps/noise)
 include_directories(deps/glad/include)
 include_directories(deps/glfw/include)
 include_directories(deps/lodepng)

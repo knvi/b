@@ -1,11 +1,11 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "chunk.h"
 #include "entity.h"
 #include "shader.h"
 #include "input.h"
 #include "sockets.h"
+#include "chunk.h"
 
 #define WORLD_SIZE 32
 
@@ -71,6 +71,7 @@ void world_handle_input(world *w, input *i);
 void world_tick(world *w);
 void world_draw(world *w, double delta_time, double time_since_tick);
 void world_destroy(world *w);
+void worldgen_generate(chunk *chunk, world *w);
 
 block_id world_get_block(world *w, int x, int y, int z);
 void world_set_block(world *w, int x, int y, int z, block_id new_block);

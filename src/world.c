@@ -165,7 +165,6 @@ void world_init(world *w)
 
 void world_generate(world *w)
 {
-    static const int GRASS_LEVEL = 40;
 
     for (int x = 0; x < WORLD_SIZE; x++)
     {
@@ -173,27 +172,7 @@ void world_generate(world *w)
         {
             chunk *c = &w->chunks[x * WORLD_SIZE + z];
 
-            for (int x = 0; x < CHUNK_SIZE; x++)
-            {
-                for (int y = 0; y < WORLD_HEIGHT; y++)
-                {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
-                    {
-                        if (y > GRASS_LEVEL)
-                            c->blocks[x][y][z] = AIR;
-                        else if (y == GRASS_LEVEL)
-                            c->blocks[x][y][z] = GRASS;
-                        else if (y == 0)
-                            c->blocks[x][y][z] = BEDROCK;
-                        else if (y < 25)
-                            c->blocks[x][y][z] = STONE;
-                        else if (y < GRASS_LEVEL)
-                            c->blocks[x][y][z] = DIRT;
-                    }
-                }
-            }
-
-            c->dirty = 1;
+            worldgen_generate(c, w);
         }
     }
 }
