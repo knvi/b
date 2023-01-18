@@ -1,26 +1,25 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "entity.h"
-#include "shader.h"
-#include "input.h"
-#include "sockets.h"
 #include "chunk.h"
+#include "entity.h"
+#include "input.h"
+#include "shader.h"
+#include "sockets.h"
 
 #define WORLD_SIZE 32
 
 #define WORLD_TO_CHUNK(x) (x < 0 ? x % CHUNK_SIZE == 0 ? 0 : CHUNK_SIZE + x % CHUNK_SIZE : x % CHUNK_SIZE)
 #define CHUNK_FROM_WORLD_COORDS(x) ((x / CHUNK_SIZE < 0 ? x + 1 : x) / CHUNK_SIZE + WORLD_SIZE / 2 - (x < 0 ? 1 : 0))
+#define GET_CURRENT_HOTBAR(w) (((w)->selected_block - 1) / 9)
 
 typedef struct
 {
-    short x;
-    short y;
-    short z;
-    short prev_x;
-    short prev_y;
-    short prev_z;
+    vec3 position;
+    vec3 smoothed_position;
+    vec3 prev_position;
     unsigned char id;
+    char nickname[31];
 } network_player;
 
 typedef struct
@@ -33,7 +32,9 @@ typedef struct
     network_player players[MAX_PLAYERS];
     unsigned char num_players;
     entity player;
-    
+    int fly_mode;
+    int noclip_mode;
+
     vec3 camera_position;
     vec2 camera_rotation;
     int destroying_block;
@@ -71,7 +72,6 @@ void world_handle_input(world *w, input *i);
 void world_tick(world *w);
 void world_draw(world *w, double delta_time, double time_since_tick);
 void world_destroy(world *w);
-void worldgen_generate(chunk *chunk, world *w);
 
 block_id world_get_block(world *w, int x, int y, int z);
 void world_set_block(world *w, int x, int y, int z, block_id new_block);

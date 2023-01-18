@@ -19,10 +19,13 @@ typedef struct
     GLuint vao;
     GLuint vbo;
     GLuint vert_count;
+    GLuint water_offset;
+    GLuint water_count;
 } chunk;
 
 void chunk_build_buffer(chunk *c, void *w, block_vertex *data_buffer);
 void chunk_init(chunk *c, int x, int z, shader *blocks_shader);
 void chunk_destroy(chunk *c);
+void worldgen_gen(chunk *chunk);
 
 #endif

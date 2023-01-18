@@ -41,3 +41,32 @@ int block_is_opaque(block_id block)
             return 1;
     }
 }
+
+int block_is_obstacle(block_id block)
+{
+    switch(block)
+    {
+        case AIR:
+        case FLOWING_WATER:
+        case STILL_WATER:
+        case STILL_LAVA:
+        case FLOWING_LAVA:
+        case SAPLING:
+            return 0;
+        default:
+            return 1;
+    }
+}
+
+int block_connects(block_id block)
+{
+    switch (block)
+    {
+        case FLOWING_WATER:
+        case STILL_WATER:
+        case GLASS:
+            return 1;
+        default:
+            return 0;
+    }
+}

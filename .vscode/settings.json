@@ -4,6 +4,7 @@
         "block.h": "c",
         "winsock2.h": "c",
         "ws2tcpip.h": "c",
-        "chunk.h": "c"
+        "chunk.h": "c",
+        "glad.h": "c"
     }
 }

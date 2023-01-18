@@ -10,16 +10,18 @@ typedef struct
     GLFWwindow *window;
     float window_width;
     float window_height;
-    int v_sync;
 
     world w;
     gui gui;
 
+    gui_text *debug_text;
+
     int online;
-    char* buffer;
+    char *buffer;
     z_stream inf_stream;
     struct sockaddr_in server_addr;
     SOCKET server_socket;
+    char player_nickname[31];
     fd_set read_fds;
     struct timeval tv;
 } game;

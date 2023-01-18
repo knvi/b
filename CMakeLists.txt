@@ -15,8 +15,9 @@ add_executable(
     src/gui.c
     src/game.c
     src/input.c
-    src/worldgen.c
+    src/noise.c
     src/main.c
+    src/worldgen.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c
     deps/noise/noise1234.c

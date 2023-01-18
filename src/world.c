@@ -2,6 +2,7 @@
 
 #include "util.h"
 #include "block_data.h"
+#include "worldgen.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -161,10 +162,13 @@ void world_init(world *w)
     glEnableVertexAttribArray(w->lines_shader.position_location);
 
     w->num_players = 0;
+    w->fly_mode = 0;
+    w->noclip_mode = 0;
 }
 
 void world_generate(world *w)
 {
+    static const int GRASS_LEVEL = 40;
 
     for (int x = 0; x < WORLD_SIZE; x++)
     {
@@ -172,7 +176,29 @@ void world_generate(world *w)
         {
             chunk *c = &w->chunks[x * WORLD_SIZE + z];
 
-            worldgen_generate(c, w);
+            // for (int x = 0; x < CHUNK_SIZE; x++)
+            // {
+            //     for (int y = 0; y < WORLD_HEIGHT; y++)
+            //     {
+            //         for (int z = 0; z < CHUNK_SIZE; z++)
+            //         {
+            //             if (y > GRASS_LEVEL)
+            //                 c->blocks[x][y][z] = AIR;
+            //             else if (y == GRASS_LEVEL)
+            //                 c->blocks[x][y][z] = GRASS;
+            //             else if (y == 0)
+            //                 c->blocks[x][y][z] = BEDROCK;
+            //             else if (y < 25)
+            //                 c->blocks[x][y][z] = STONE;
+            //             else if (y < GRASS_LEVEL)
+            //                 c->blocks[x][y][z] = DIRT;
+            //         }
+            //     }
+            // }
+
+            worldgen_gen(c);
+
+            c->dirty = 1;
         }
     }
 }
@@ -214,19 +240,51 @@ void world_handle_input(world *w, input *i)
             w->player.move_direction.x += cosf(RADIANS(w->camera_rotation.y));
             w->player.move_direction.z -= sinf(RADIANS(w->camera_rotation.y));
         }
-
-        if (w->player.move_direction.x != 0.0f || w->player.move_direction.y != 0.0f || w->player.move_direction.z != 0.0f)
+        if (i->keys_down[GLFW_KEY_F] && !w->noclip_mode)
+        {
+            w->fly_mode = !w->fly_mode;
+        }
+        if (i->keys_down[GLFW_KEY_N])
+        {
+            w->fly_mode = 1;
+            w->noclip_mode = !w->noclip_mode;
+        }
+        if (w->player.move_direction.x != 0.0f || w->player.move_direction.z != 0.0f)
         {
             normalize(&w->player.move_direction);
         }
+        if (w->fly_mode)
+        {
+            if (i->keys[GLFW_KEY_SPACE])
+            {
+                w->player.move_direction.y += 1.0f;
+            }
+            if (i->keys[GLFW_KEY_LEFT_SHIFT])
+            {
+                w->player.move_direction.y -= 1.0f;
+            }
+        }
 
-        if(i->scroll_delta < 0.0) {
+        if (i->keys_down[GLFW_KEY_1]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 1;
+        if (i->keys_down[GLFW_KEY_2]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 2;
+        if (i->keys_down[GLFW_KEY_3]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 3;
+        if (i->keys_down[GLFW_KEY_4]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 4;
+        if (i->keys_down[GLFW_KEY_5]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 5;
+        if (i->keys_down[GLFW_KEY_6]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 6;
+        if (i->keys_down[GLFW_KEY_7]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 7;
+        if (i->keys_down[GLFW_KEY_8]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 8;
+        if (i->keys_down[GLFW_KEY_9]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 9;
+
+        if (i->scroll_delta < 0.0)
+        {
             w->selected_block++;
-        } else if (i->scroll_delta > 0.0) {
+        }
+        else if (i->scroll_delta > 0.0)
+        {
             w->selected_block--;
         }
-        if(w->selected_block == 0) w->selected_block = 3*9;
-        else if(w->selected_block == 3*9+1) w->selected_block = 1;
+        if (w->selected_block == 0) w->selected_block = 3 * 9;
+        else if (w->selected_block == 3 * 9 + 1) w->selected_block = 1;
 
         if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_LEFT])
         {
@@ -236,19 +294,33 @@ void world_handle_input(world *w, input *i)
         {
             w->placing_block = 1;
         }
+        if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_MIDDLE])
+        {
+            block_id selected_block = world_get_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z);
+            if (selected_block != AIR) w->selected_block = selected_block;
+        }
     }
 }
 
 void world_tick(world *w)
 {
-    w->player.velocity.y -= 0.08f;
-    w->player.velocity.y *= 0.98f;
+    if (w->fly_mode)
+    {
+        w->player.velocity.x *= 0.85f;
+        w->player.velocity.z *= 0.85f;
+        w->player.velocity.y *= 0.6f;
+    }
+    else
+    {
+        w->player.velocity.y -= 0.08f;
+        w->player.velocity.y *= 0.98f;
 
-    if (w->player.jumping && w->player.on_ground)
-        w->player.velocity.y += 0.5f;
+        if (w->player.jumping && w->player.on_ground)
+            w->player.velocity.y += 0.5f;
 
-    w->player.velocity.x *= w->player.on_ground ? 0.6f : 0.91f;
-    w->player.velocity.z *= w->player.on_ground ? 0.6f : 0.91f;
+        w->player.velocity.x *= w->player.on_ground ? 0.6f : 0.91f;
+        w->player.velocity.z *= w->player.on_ground ? 0.6f : 0.91f;
+    }
 
     w->block_changed = 0;
     if (w->block_in_range)
@@ -268,7 +340,7 @@ void world_tick(world *w)
             vec3 position = {w->selected_block_x, w->selected_block_y - 0.5f, w->selected_block_z};
             bounding_box_update(&block_box, &position);
 
-            if (!is_colliding(&block_box, &w->player.box))
+            if (!block_is_obstacle(w->selected_block) || !is_colliding(&block_box, &w->player.box))
             {
                 world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, w->selected_block);
                 w->block_changed = 1;
@@ -280,7 +352,14 @@ void world_tick(world *w)
     w->placing_block = 0;
 
     vec3 velocity_change = {0.0f};
-    multiply_v3f(&velocity_change, &w->player.move_direction, w->player.on_ground ? 0.1f : 0.02f);
+    if (w->fly_mode)
+    {
+        velocity_change.x = w->player.move_direction.x * 0.1f;
+        velocity_change.z = w->player.move_direction.z * 0.1f;
+        velocity_change.y = w->player.move_direction.y * 0.2f;
+    }
+    else
+        multiply_v3f(&velocity_change, &w->player.move_direction, w->player.on_ground ? 0.1f : 0.02f);
     add_v3(&w->player.velocity, &w->player.velocity, &velocity_change);
 }
 
@@ -292,27 +371,32 @@ void world_draw(world *w, double delta_time, double time_since_tick)
 
     vec3 player_delta;
     multiply_v3f(&player_delta, &w->player.velocity, tick_delta_time);
-    entity_move(&w->player, w, &player_delta);
 
-    w->player.on_ground = 0;
-    for (int x = roundf(w->player.box.min.x); x <= roundf(w->player.box.max.x); x++)
-    {
-        for (int z = roundf(w->player.box.min.z); z <= roundf(w->player.box.max.z); z++)
+    if (w->noclip_mode) {
+        add_v3(&w->player.position, &w->player.position, &player_delta);
+    } else {
+        entity_move(&w->player, w, &player_delta);
+
+        w->player.on_ground = 0;
+        for (int x = roundf(w->player.box.min.x); x <= roundf(w->player.box.max.x); x++)
         {
-            if (world_get_block(w, x, roundf(w->player.position.y - 0.5f), z) == AIR)
-                continue;
-            vec3 block_position = {x, roundf(w->player.position.y) - 1.5f, z};
-            bounding_box_update(&block_box, &block_position);
-            if (is_touching(&w->player.box, &block_box))
+            for (int z = roundf(w->player.box.min.z); z <= roundf(w->player.box.max.z); z++)
             {
-                w->player.on_ground = 1;
-                break;
+                if (world_get_block(w, x, roundf(w->player.position.y - 0.5f), z) == AIR)
+                    continue;
+                vec3 block_position = {x, roundf(w->player.position.y) - 1.5f, z};
+                bounding_box_update(&block_box, &block_position);
+                if (is_touching(&w->player.box, &block_box))
+                {
+                    w->player.on_ground = 1;
+                    break;
+                }
             }
+            if (w->player.on_ground) break;
         }
-        if (w->player.on_ground) break;
-    }
 
-    multiply_v3f(&w->player.velocity, &player_delta, 1.0f / tick_delta_time);
+        multiply_v3f(&w->player.velocity, &player_delta, 1.0f / tick_delta_time);
+    }
 
     w->camera_position.x = w->player.position.x;
     w->camera_position.z = w->player.position.z;
@@ -322,6 +406,8 @@ void world_draw(world *w, double delta_time, double time_since_tick)
 
     glClearColor(0.6f, 0.7f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_DEPTH_TEST);
 
     vec3 view_translation;
     multiply_v3f(&view_translation, &w->camera_position, -1.0f);
@@ -394,28 +480,13 @@ void world_draw(world *w, double delta_time, double time_since_tick)
     glBindVertexArray(w->frame_vao);
 
     vec3 data[24];
-    vec3 position;
-    vec3 prev_position;
 
     for (int i = 0; i < w->num_players; i++)
     {
-        position = (vec3)
-        {
-            w->players[i].x / 32.0f,
-            w->players[i].y / 32.0f + w->player.box.size.y * 0.5f,
-            w->players[i].z / 32.0f
-        };
+        network_player *player = &w->players[i];
+        v3_lerp(&player->smoothed_position, &player->prev_position, &player->position, time_since_tick * 20.0f);
 
-        prev_position = (vec3)
-        {
-            w->players[i].prev_x / 32.0f,
-            w->players[i].prev_y / 32.0f + w->player.box.size.y * 0.5f,
-            w->players[i].prev_z / 32.0f
-        };
-
-        v3_lerp(&position, &prev_position, &position, time_since_tick * 20.0f);
-
-        make_frame(data, &position, &w->player.box);
+        make_frame(data, &player->smoothed_position, &w->player.box);
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
         glDrawArrays(GL_LINES, 0, 24);
@@ -423,7 +494,7 @@ void world_draw(world *w, double delta_time, double time_since_tick)
 
     if (w->block_in_range)
     {
-        position = (vec3)
+        vec3 position =
         {
             w->selected_block_x,
             w->selected_block_y,
@@ -433,6 +504,21 @@ void world_draw(world *w, double delta_time, double time_since_tick)
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
         glDrawArrays(GL_LINES, 0, 24);
+    }
+
+    glUseProgram(w->blocks_shader.program);
+
+    for (int x = -WORLD_SIZE / 2; x < WORLD_SIZE - WORLD_SIZE / 2; x++)
+    {
+        for (int z = -WORLD_SIZE / 2; z < WORLD_SIZE - WORLD_SIZE / 2; z++)
+        {
+            chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
+            vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
+            translate(&w->blocks_model, &chunk_translation);
+            glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
+            glBindVertexArray(c->vao);
+            glDrawArrays(GL_TRIANGLES, c->water_offset, c->water_count);
+        }
     }
 }
 

@@ -26,6 +26,7 @@ typedef struct
 static vec3 AXIS_UP = {0.0f, 1.0f, 0.0f};
 static vec3 AXIS_RIGHT = {1.0f, 0.0f, 0.0f};
 static vec3 AXIS_FRONT = {0.0f, 0.0f, 1.0f};
+static vec3 VEC3_ONE = {1.0f, 1.0f, 1.0f};
 
 static mat4 TEMP_MAT;
 
@@ -42,6 +43,7 @@ void add_v2(vec2 *v, vec2 *v1, vec2 *v2);
 void subtract_v2(vec2 *v, vec2 *v1, vec2 *v2);
 
 void multiply(mat4 *m, mat4 *m1, mat4 *m2);
+void scale(mat4 *m, vec3* v);
 void multiply_v3f(vec3 *v, vec3 *v1, float v2);
 void multiply_v2f(vec2 *v, vec2 *v1, float v2);
 
