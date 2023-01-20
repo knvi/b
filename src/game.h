@@ -11,7 +11,7 @@ typedef struct
     float window_width;
     float window_height;
 
-    world w;
+    struct World w;
     gui gui;
 
     gui_text *debug_text;

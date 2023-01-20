@@ -1,4 +1,5 @@
 #include "game.h"
+#include "worldgen.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,7 +94,7 @@ void game_init(game *g, GLFWwindow *window)
         g->tv.tv_usec = 0;
     }
 
-    if (!g->online) world_generate(&g->w);
+    if (!g->online) worldgen_init(&g->w);
 }
 
 void game_destroy(game *g)
@@ -245,7 +246,7 @@ void game_tick(game *g)
 
                                 size_t chunk_x = packet->x + WORLD_SIZE / 2;
                                 size_t chunk_z = packet->z + WORLD_SIZE / 2;
-                                chunk *c = &g->w.chunks[chunk_x * WORLD_SIZE + chunk_z];
+                                struct Chunk *c = &g->w.chunks[chunk_x * WORLD_SIZE + chunk_z];
 
                                 g->inf_stream.zalloc = Z_NULL;
                                 g->inf_stream.zfree = Z_NULL;

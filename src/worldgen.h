@@ -4,6 +4,7 @@
 #include "chunk.h"
 #include "world.h"
 
-void worldgen_generate(chunk *chunk, world *w);
+void worldgen_noise(struct Chunk *chunk);
+void worldgen_init(struct World *world);
 
 #endif

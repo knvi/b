@@ -25,12 +25,6 @@ typedef double f64;
 
 #define WATER_LEVEL 64
 
-enum Biome {
-    OCEAN,
-    PLAINS,
-    BEACH
-};
-
 typedef f32 (*FNoise)(void *p, f32 s, f32 x, f32 z);
 
 struct Noise {

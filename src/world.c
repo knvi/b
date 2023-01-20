@@ -3,13 +3,14 @@
 #include "util.h"
 #include "block_data.h"
 #include "worldgen.h"
+#include <assert.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <math.h>
 
-void calculate_selected_block(world *w, float radius)
+void calculate_selected_block(struct World *w, float radius)
 {
     vec3 direction =
     {
@@ -106,7 +107,7 @@ void calculate_selected_block(world *w, float radius)
     }
 }
 
-void world_init(world *w)
+void world_init(struct World *w)
 {
     w->player.box = (bounding_box) {{0.6f, 1.8f, 0.6f}};
     w->player.position = (vec3) {0.0f, WORLD_HEIGHT, 0.0f};
@@ -135,13 +136,13 @@ void world_init(world *w)
 
     w->chunk_data_buffer = malloc(36 * CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT * sizeof(block_vertex));
 
-    w->chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(chunk));
+    w->chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(struct Chunk));
 
     for (int x = 0; x < WORLD_SIZE; x++)
     {
         for (int z = 0; z < WORLD_SIZE; z++)
         {
-            chunk_init(&w->chunks[x * WORLD_SIZE + z], x - WORLD_SIZE / 2, z - WORLD_SIZE / 2, &w->blocks_shader);
+            chunk_init(&w->chunks[x * WORLD_SIZE + z], w, x - WORLD_SIZE / 2, z - WORLD_SIZE / 2, &w->blocks_shader);
         }
     }
 
@@ -166,44 +167,7 @@ void world_init(world *w)
     w->noclip_mode = 0;
 }
 
-void world_generate(world *w)
-{
-    static const int GRASS_LEVEL = 40;
-
-    for (int x = 0; x < WORLD_SIZE; x++)
-    {
-        for (int z = 0; z < WORLD_SIZE; z++)
-        {
-            chunk *c = &w->chunks[x * WORLD_SIZE + z];
-
-            // for (int x = 0; x < CHUNK_SIZE; x++)
-            // {
-            //     for (int y = 0; y < WORLD_HEIGHT; y++)
-            //     {
-            //         for (int z = 0; z < CHUNK_SIZE; z++)
-            //         {
-            //             if (y > GRASS_LEVEL)
-            //                 c->blocks[x][y][z] = AIR;
-            //             else if (y == GRASS_LEVEL)
-            //                 c->blocks[x][y][z] = GRASS;
-            //             else if (y == 0)
-            //                 c->blocks[x][y][z] = BEDROCK;
-            //             else if (y < 25)
-            //                 c->blocks[x][y][z] = STONE;
-            //             else if (y < GRASS_LEVEL)
-            //                 c->blocks[x][y][z] = DIRT;
-            //         }
-            //     }
-            // }
-
-            worldgen_gen(c);
-
-            c->dirty = 1;
-        }
-    }
-}
-
-void world_handle_input(world *w, input *i)
+void world_handle_input(struct World *w, input *i)
 {
     w->window_width = i->window_width;
     w->window_height = i->window_height;
@@ -302,7 +266,7 @@ void world_handle_input(world *w, input *i)
     }
 }
 
-void world_tick(world *w)
+void world_tick(struct World *w)
 {
     if (w->fly_mode)
     {
@@ -363,7 +327,7 @@ void world_tick(world *w)
     add_v3(&w->player.velocity, &w->player.velocity, &velocity_change);
 }
 
-void world_draw(world *w, double delta_time, double time_since_tick)
+void world_draw(struct World *w, double delta_time, double time_since_tick)
 {
     double tick_delta_time = delta_time * 20.0f;
 
@@ -427,14 +391,14 @@ void world_draw(world *w, double delta_time, double time_since_tick)
 
     for (int i = 0; i < 4; i++)
     {
-        chunk *chunk_to_update = NULL;
+        struct Chunk *chunk_to_update = NULL;
         float min_distance = -1.0f;
 
         for (int x = 0; x < WORLD_SIZE; x++)
         {
             for (int z = 0; z < WORLD_SIZE; z++)
             {
-                chunk *c = &w->chunks[x * WORLD_SIZE + z];
+                struct Chunk *c = &w->chunks[x * WORLD_SIZE + z];
 
                 if (c->dirty)
                 {
@@ -453,7 +417,7 @@ void world_draw(world *w, double delta_time, double time_since_tick)
         if (chunk_to_update)
         {
             glBindBuffer(GL_ARRAY_BUFFER, chunk_to_update->vbo);
-            chunk_build_buffer(chunk_to_update, w, w->chunk_data_buffer);
+            chunk_build_buffer(chunk_to_update, w->chunk_data_buffer);
         }
         else break;
     }
@@ -462,7 +426,7 @@ void world_draw(world *w, double delta_time, double time_since_tick)
     {
         for (int z = -WORLD_SIZE / 2; z < WORLD_SIZE - WORLD_SIZE / 2; z++)
         {
-            chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
+            struct Chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
             vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
             translate(&w->blocks_model, &chunk_translation);
             glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
@@ -512,7 +476,7 @@ void world_draw(world *w, double delta_time, double time_since_tick)
     {
         for (int z = -WORLD_SIZE / 2; z < WORLD_SIZE - WORLD_SIZE / 2; z++)
         {
-            chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
+            struct Chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
             vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
             translate(&w->blocks_model, &chunk_translation);
             glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
@@ -522,7 +486,7 @@ void world_draw(world *w, double delta_time, double time_since_tick)
     }
 }
 
-void world_destroy(world *w)
+void world_destroy(struct World *w)
 {
     for (int x = 0; x < WORLD_SIZE; x++)
     {
@@ -541,22 +505,35 @@ void world_destroy(world *w)
     glDeleteProgram(w->blocks_shader.program);
 }
 
-block_id world_get_block(world *w, int x, int y, int z)
+block_id world_get_block(struct World *w, int x, int y, int z)
 {
-    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
-    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
-    if (chunk_x < 0 || chunk_x >= WORLD_SIZE || chunk_z < 0 || chunk_z >= WORLD_SIZE || y < 0 || y >= WORLD_HEIGHT)
+    const int max = WORLD_SIZE / 2;
+
+    if(x < -max || x >= max || z < -max || z >= max)
+    {
         return AIR;
-    else
-        return w->chunks[chunk_x * WORLD_SIZE + chunk_z].blocks[WORLD_TO_CHUNK(x)][y][WORLD_TO_CHUNK(z)];
+    }
+
+    x += max; z += max;
+    struct Chunk* c = &w->chunks[x * WORLD_SIZE + z];
+
+    size_t block_x = WORLD_TO_CHUNK(x);
+    size_t block_z = WORLD_TO_CHUNK(z);
+    return c->blocks[block_x][y][block_z];
 }
 
-void world_set_block(world *w, int x, int y, int z, block_id new_block)
+void world_set_block(struct World *w, int x, int y, int z, block_id new_block)
 {
-    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
-    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
-    chunk *c = &w->chunks[chunk_x * WORLD_SIZE + chunk_z];
-    
+    const int max = WORLD_SIZE / 2;
+
+    if (x < -max || x >= max || z < -max || z >= max)
+    {
+        return;
+    }
+
+    x += max; z += max;
+    struct Chunk* c = &w->chunks[x * WORLD_SIZE + z];
+
     size_t block_x = WORLD_TO_CHUNK(x);
     size_t block_z = WORLD_TO_CHUNK(z);
     block_id *b = &c->blocks[block_x][y][block_z];
@@ -564,10 +541,24 @@ void world_set_block(world *w, int x, int y, int z, block_id new_block)
     if (*b != new_block)
     {
         *b = new_block;
-        if (block_x == 0) w->chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * WORLD_SIZE + chunk_z].dirty = 1;
-        else if (block_x == CHUNK_SIZE - 1) w->chunks[(chunk_x == WORLD_SIZE - 1 ? chunk_x : chunk_x + 1) * WORLD_SIZE + chunk_z].dirty = 1;
-        if (block_z == 0) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
-        else if (block_z == CHUNK_SIZE - 1) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == WORLD_SIZE - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
+        if (block_x == 0) w->chunks[(x == 0 ? x : x - 1) * WORLD_SIZE + z].dirty = 1;
+        else if (block_x == CHUNK_SIZE - 1) w->chunks[(x == WORLD_SIZE - 1 ? x : x + 1) * WORLD_SIZE + z].dirty = 1;
+        if (block_z == 0) w->chunks[x * WORLD_SIZE + (z == 0 ? z : z - 1)].dirty = 1;
+        else if (block_z == CHUNK_SIZE - 1) w->chunks[x * WORLD_SIZE + (z == WORLD_SIZE - 1 ? z : z + 1)].dirty = 1;
         c->dirty = 1;
     }
+}
+
+// world_get_chunk
+struct Chunk* world_get_chunk(struct World *w, int x, int z)
+{
+    const int max = WORLD_SIZE / 2;
+
+    if (x < -max || x >= max || z < -max || z >= max)
+    {
+        return NULL;
+    }
+
+    x += max; z += max;
+    return &w->chunks[x * WORLD_SIZE + z];
 }

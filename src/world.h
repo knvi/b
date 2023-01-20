@@ -22,9 +22,9 @@ typedef struct
     char nickname[31];
 } network_player;
 
-typedef struct
+struct World
 {
-    chunk *chunks;
+    struct Chunk *chunks;
 
     float window_width;
     float window_height;
@@ -64,16 +64,18 @@ typedef struct
     
     GLuint frame_vao;
     GLuint frame_vbo;
-} world;
+};
 
-void world_init(world *w);
-void world_generate(world *w);
-void world_handle_input(world *w, input *i);
-void world_tick(world *w);
-void world_draw(world *w, double delta_time, double time_since_tick);
-void world_destroy(world *w);
+void world_init(struct World *w);
+void world_generate(struct World *w);
+void world_handle_input(struct World *w, input *i);
+void world_tick(struct World *w);
+void world_draw(struct World *w, double delta_time, double time_since_tick);
+void world_destroy(struct World *w);
 
-block_id world_get_block(world *w, int x, int y, int z);
-void world_set_block(world *w, int x, int y, int z, block_id new_block);
+block_id world_get_block(struct World *w, int x, int y, int z);
+void world_set_block(struct World *w, int x, int y, int z, block_id new_block);
+
+struct Chunk* world_get_chunk(struct World *w, int x, int z);
 
 #endif

@@ -80,7 +80,7 @@ void gui_set_text(gui_text *text, const char *s, float scale)
     glBufferData(GL_ARRAY_BUFFER, sizeof(gui_vertex) * text->vert_count, gui_buffer_data, GL_DYNAMIC_DRAW);
 }
 
-void gui_init(gui *g, world *w)
+void gui_init(gui *g, struct World *w)
 {
     glLogicOp(GL_INVERT);
 

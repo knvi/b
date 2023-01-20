@@ -26,7 +26,7 @@ typedef struct
     float window_height;
     int scale;
 
-    world *w;
+    struct World *w;
 
     shader gui_shader;
 
@@ -45,7 +45,7 @@ typedef struct
     GLuint hotbar_item_vbos[256];
 } gui;
 
-void gui_init(gui *g, world* w);
+void gui_init(gui *g, struct World* w);
 void gui_handle_input(gui *g, input* i);
 void gui_draw(gui *g);
 void gui_destroy(gui *g);
