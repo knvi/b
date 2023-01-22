@@ -1,4 +1,7 @@
 # b
+
+![image](screenshot.png)
+
 to build on linux/mac
 ```
 mkdir build && cd build
