@@ -19,9 +19,27 @@ typedef struct
 
 typedef struct
 {
+    int x;
+    int y;
+    int z;
+} ivec3;
+
+typedef struct
+{
     float x;
     float y;
 } vec2;
+
+typedef struct
+{
+    int x;
+    int y;
+} ivec2;
+
+#define VEC3S2V(v) (vec3){v.x, v.y, v.z}
+#define VEC2S2V(v) (vec2){v.x, v.y}
+#define VEC3I2V(v) (ivec3){v.x, v.y, v.z}
+#define VEC2I2V(v) (ivec2){v.x, v.y}
 
 static vec3 AXIS_UP = {0.0f, 1.0f, 0.0f};
 static vec3 AXIS_RIGHT = {1.0f, 0.0f, 0.0f};
@@ -41,6 +59,12 @@ void add_v3(vec3 *v, vec3 *v1, vec3 *v2);
 void add_v2(vec2 *v, vec2 *v1, vec2 *v2);
 
 void subtract_v2(vec2 *v, vec2 *v1, vec2 *v2);
+vec2 subtract_v2r(vec2 v1, vec2 v2);
+vec3 subtract_v3(vec3 v1, vec3 v2);
+ivec3 subtract_v3i(ivec3 v1, ivec3 v2);
+
+float vec3_norm(vec3 v);
+float vec2_norm(vec2 v);
 
 void multiply(mat4 *m, mat4 *m1, mat4 *m2);
 void scale(mat4 *m, vec3* v);

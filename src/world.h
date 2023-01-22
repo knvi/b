@@ -6,8 +6,10 @@
 #include "input.h"
 #include "shader.h"
 #include "sockets.h"
+#include "noise.h"
 
 #define WORLD_SIZE 32
+#define ULONG_MAX 0xFFFFFFFFUL
 
 #define WORLD_TO_CHUNK(x) (x < 0 ? x % CHUNK_SIZE == 0 ? 0 : CHUNK_SIZE + x % CHUNK_SIZE : x % CHUNK_SIZE)
 #define CHUNK_FROM_WORLD_COORDS(x) ((x / CHUNK_SIZE < 0 ? x + 1 : x) / CHUNK_SIZE + WORLD_SIZE / 2 - (x < 0 ? 1 : 0))
@@ -34,6 +36,8 @@ struct World
     entity player;
     int fly_mode;
     int noclip_mode;
+
+    uint64_t seed;
 
     vec3 camera_position;
     vec2 camera_rotation;

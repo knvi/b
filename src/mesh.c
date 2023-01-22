@@ -113,7 +113,7 @@ int make_block(block_vertex *data, vec3 position, block_id block, block_id neigh
     block_vertex *d = data;
     int vert_count = 0;
 
-    if (block == SAPLING)
+    if (block == SAPLING || block == ROSE || block == BUTTERCUP)
     {
         static vec3 cross_positions[][4] = {
             {

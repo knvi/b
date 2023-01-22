@@ -22,6 +22,11 @@
 #define LEAVES 18
 #define SPONGE 19
 #define GLASS 20
+#define BUTTERCUP 21
+#define ROSE 22
+#define WOOL 33
+#define CLAY 34
+#define BRICKS 35
 
 typedef unsigned char block_id;
 

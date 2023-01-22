@@ -3,6 +3,7 @@
 
 #include "chunk.h"
 #include "world.h"
+#include "time.h"
 
 void worldgen_noise(struct Chunk *chunk);
 void worldgen_init(struct World *world);

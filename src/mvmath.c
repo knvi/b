@@ -7,6 +7,59 @@ void normalize(vec3 *v)
     v->x /= d; v->y /= d; v->z /= d;
 }
 
+vec3 subtract_v3(vec3 v1, vec3 v2) {
+    vec3 result;
+    result.x = v1.x - v2.x;
+    result.y = v1.y - v2.y;
+    result.z = v1.z - v2.z;
+    return result;
+}
+
+ivec3 subtract_v3i(ivec3 v1, ivec3 v2) {
+    ivec3 result;
+    result.x = v1.x - v2.x;
+    result.y = v1.y - v2.y;
+    result.z = v1.z - v2.z;
+    return result;
+}
+
+vec2 subtract_v2r(vec2 v1, vec2 v2) {
+    vec2 result;
+    result.x = v1.x - v2.x;
+    result.y = v1.y - v2.y;
+    return result;
+};
+
+float
+vec3_dot(vec3 a, vec3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+float
+vec3_norm2(vec3 v){
+    return vec3_dot(v, v);
+}
+
+float
+vec3_norm(vec3 v) {
+    return sqrtf(vec3_norm2(v));
+}
+
+float
+vec2_dot(vec2 a, vec2 b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+float
+vec2_norm2(vec2 v){
+    return vec2_dot(v, v);
+}
+
+float
+vec2_norm(vec2 v) {
+    return sqrtf(vec2_norm2(v));
+}
+
 void identity(mat4 *m)
 {
     m->value[0]  = 1.0f; m->value[1]  = 0.0f; m->value[2]  = 0.0f; m->value[3]  = 0.0f;

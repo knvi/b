@@ -10,6 +10,7 @@ typedef struct {
     int jumping;
     int on_ground;
     bounding_box box;
+    int tool;
 } entity;
 
 void entity_move(entity *e, void *w, vec3 *delta_pos);

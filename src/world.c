@@ -13,27 +13,29 @@
 void calculate_selected_block(struct World *w, float radius)
 {
     vec3 direction =
-    {
-        .x = -sinf(RADIANS(w->camera_rotation.y)) * cosf(RADIANS(w->camera_rotation.x)),
-        .z = -cosf(RADIANS(w->camera_rotation.y)) * cosf(RADIANS(w->camera_rotation.x)),
-        .y = sinf(RADIANS(w->camera_rotation.x))
-    };
+        {
+            .x = -sinf(RADIANS(w->camera_rotation.y)) * cosf(RADIANS(w->camera_rotation.x)),
+            .z = -cosf(RADIANS(w->camera_rotation.y)) * cosf(RADIANS(w->camera_rotation.x)),
+            .y = sinf(RADIANS(w->camera_rotation.x))};
 
     w->selected_block_x = roundf(w->camera_position.x);
     w->selected_block_z = roundf(w->camera_position.z);
     w->selected_block_y = roundf(w->camera_position.y);
 
-    int step_x = direction.x > 0.0f ? 1 : direction.x < 0.0f ? -1 : 0;
-    int step_z = direction.z > 0.0f ? 1 : direction.z < 0.0f ? -1 : 0;
-    int step_y = direction.y > 0.0f ? 1 : direction.y < 0.0f ? -1 : 0;
+    int step_x = direction.x > 0.0f ? 1 : direction.x < 0.0f ? -1
+                                                             : 0;
+    int step_z = direction.z > 0.0f ? 1 : direction.z < 0.0f ? -1
+                                                             : 0;
+    int step_y = direction.y > 0.0f ? 1 : direction.y < 0.0f ? -1
+                                                             : 0;
 
     float t_max_x = (direction.x > 0.0f ? roundf(w->camera_position.x) + 0.5f - w->camera_position.x : roundf(w->camera_position.x) - 0.5f - w->camera_position.x) / direction.x;
     float t_max_z = (direction.z > 0.0f ? roundf(w->camera_position.z) + 0.5f - w->camera_position.z : roundf(w->camera_position.z) - 0.5f - w->camera_position.z) / direction.z;
     float t_max_y = (direction.y > 0.0f ? roundf(w->camera_position.y) + 0.5f - w->camera_position.y : roundf(w->camera_position.y) - 0.5f - w->camera_position.y) / direction.y;
 
-    float t_delta_x = (float) step_x / direction.x;
-    float t_delta_z = (float) step_z / direction.z;
-    float t_delta_y = (float) step_y / direction.y;
+    float t_delta_x = (float)step_x / direction.x;
+    float t_delta_z = (float)step_z / direction.z;
+    float t_delta_y = (float)step_y / direction.y;
 
     while (1)
     {
@@ -109,16 +111,17 @@ void calculate_selected_block(struct World *w, float radius)
 
 void world_init(struct World *w)
 {
-    w->player.box = (bounding_box) {{0.6f, 1.8f, 0.6f}};
-    w->player.position = (vec3) {0.0f, WORLD_HEIGHT, 0.0f};
-    w->player.velocity = (vec3) {0.0f};
-    w->player.move_direction = (vec3) {0.0f};
+    w->player.box = (bounding_box){{0.6f, 1.8f, 0.6f}};
+    w->player.position = (vec3){0.0f, WORLD_HEIGHT, 0.0f};
+    w->player.velocity = (vec3){0.0f};
+    w->player.move_direction = (vec3){0.0f};
     w->player.jumping = 0;
     w->player.on_ground = 0;
     w->selected_block = 1;
     w->destroying_block = 0;
     w->placing_block = 0;
-    w->camera_rotation = (vec2) {0.0f};
+    w->camera_rotation = (vec2){0.0f};
+    w->seed = RAND(0, ULONG_MAX - 1);
 
     w->blocks_shader.program = load_program("res/shaders/blocks.vsh", "res/shaders/blocks.fsh");
     w->blocks_shader.position_location = glGetAttribLocation(w->blocks_shader.program, "position");
@@ -180,7 +183,7 @@ void world_handle_input(struct World *w, input *i)
         w->camera_rotation.x = w->camera_rotation.x > 89.0f ? 89.0f : w->camera_rotation.x;
         w->camera_rotation.x = w->camera_rotation.x < -89.0f ? -89.0f : w->camera_rotation.x;
 
-        w->player.move_direction = (vec3) {0.0f};
+        w->player.move_direction = (vec3){0.0f};
 
         w->player.jumping = i->keys[GLFW_KEY_SPACE];
 
@@ -229,15 +232,24 @@ void world_handle_input(struct World *w, input *i)
             }
         }
 
-        if (i->keys_down[GLFW_KEY_1]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 1;
-        if (i->keys_down[GLFW_KEY_2]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 2;
-        if (i->keys_down[GLFW_KEY_3]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 3;
-        if (i->keys_down[GLFW_KEY_4]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 4;
-        if (i->keys_down[GLFW_KEY_5]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 5;
-        if (i->keys_down[GLFW_KEY_6]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 6;
-        if (i->keys_down[GLFW_KEY_7]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 7;
-        if (i->keys_down[GLFW_KEY_8]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 8;
-        if (i->keys_down[GLFW_KEY_9]) w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 9;
+        if (i->keys_down[GLFW_KEY_1])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 1;
+        if (i->keys_down[GLFW_KEY_2])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 2;
+        if (i->keys_down[GLFW_KEY_3])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 3;
+        if (i->keys_down[GLFW_KEY_4])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 4;
+        if (i->keys_down[GLFW_KEY_5])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 5;
+        if (i->keys_down[GLFW_KEY_6])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 6;
+        if (i->keys_down[GLFW_KEY_7])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 7;
+        if (i->keys_down[GLFW_KEY_8])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 8;
+        if (i->keys_down[GLFW_KEY_9])
+            w->selected_block = GET_CURRENT_HOTBAR(w) * 9 + 9;
 
         if (i->scroll_delta < 0.0)
         {
@@ -247,8 +259,10 @@ void world_handle_input(struct World *w, input *i)
         {
             w->selected_block--;
         }
-        if (w->selected_block == 0) w->selected_block = 3 * 9;
-        else if (w->selected_block == 3 * 9 + 1) w->selected_block = 1;
+        if (w->selected_block == 0)
+            w->selected_block = 3 * 9;
+        else if (w->selected_block == 3 * 9 + 1)
+            w->selected_block = 1;
 
         if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_LEFT])
         {
@@ -261,7 +275,8 @@ void world_handle_input(struct World *w, input *i)
         if (i->mouse_buttons_down[GLFW_MOUSE_BUTTON_MIDDLE])
         {
             block_id selected_block = world_get_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z);
-            if (selected_block != AIR) w->selected_block = selected_block;
+            if (selected_block != AIR)
+                w->selected_block = selected_block;
         }
     }
 }
@@ -291,9 +306,9 @@ void world_tick(struct World *w)
     {
         if (w->destroying_block)
         {
-            world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, AIR);
-            w->block_changed = 1;
-            w->new_block = AIR;
+                world_set_block(w, w->selected_block_x, w->selected_block_y, w->selected_block_z, AIR);
+                w->block_changed = 1;
+                w->new_block = AIR;
         }
         if (w->placing_block)
         {
@@ -336,9 +351,12 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
     vec3 player_delta;
     multiply_v3f(&player_delta, &w->player.velocity, tick_delta_time);
 
-    if (w->noclip_mode) {
+    if (w->noclip_mode)
+    {
         add_v3(&w->player.position, &w->player.position, &player_delta);
-    } else {
+    }
+    else
+    {
         entity_move(&w->player, w, &player_delta);
 
         w->player.on_ground = 0;
@@ -356,7 +374,8 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
                     break;
                 }
             }
-            if (w->player.on_ground) break;
+            if (w->player.on_ground)
+                break;
         }
 
         multiply_v3f(&w->player.velocity, &player_delta, 1.0f / tick_delta_time);
@@ -402,8 +421,8 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
 
                 if (c->dirty)
                 {
-                    float distance_x = abs(x - CHUNK_FROM_WORLD_COORDS((int) roundf(w->player.position.x)));
-                    float distance_z = abs(z - CHUNK_FROM_WORLD_COORDS((int) roundf(w->player.position.z)));
+                    float distance_x = abs(x - CHUNK_FROM_WORLD_COORDS((int)roundf(w->player.position.x)));
+                    float distance_z = abs(z - CHUNK_FROM_WORLD_COORDS((int)roundf(w->player.position.z)));
                     float distance = sqrtf(distance_x * distance_x + distance_z * distance_z);
                     if (distance < min_distance || min_distance < 0.0f)
                     {
@@ -419,7 +438,8 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
             glBindBuffer(GL_ARRAY_BUFFER, chunk_to_update->vbo);
             chunk_build_buffer(chunk_to_update, w->chunk_data_buffer);
         }
-        else break;
+        else
+            break;
     }
 
     for (int x = -WORLD_SIZE / 2; x < WORLD_SIZE - WORLD_SIZE / 2; x++)
@@ -459,11 +479,10 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
     if (w->block_in_range)
     {
         vec3 position =
-        {
-            w->selected_block_x,
-            w->selected_block_y,
-            w->selected_block_z
-        };
+            {
+                w->selected_block_x,
+                w->selected_block_y,
+                w->selected_block_z};
         make_frame(data, &position, &block_box);
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
@@ -507,50 +526,39 @@ void world_destroy(struct World *w)
 
 block_id world_get_block(struct World *w, int x, int y, int z)
 {
-    const int max = WORLD_SIZE / 2;
-
-    if(x < -max || x >= max || z < -max || z >= max)
-    {
+    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
+    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
+    if (chunk_x < 0 || chunk_x >= WORLD_SIZE || chunk_z < 0 || chunk_z >= WORLD_SIZE || y < 0 || y >= WORLD_HEIGHT)
         return AIR;
-    }
-
-    x += max; z += max;
-    struct Chunk* c = &w->chunks[x * WORLD_SIZE + z];
-
-    size_t block_x = WORLD_TO_CHUNK(x);
-    size_t block_z = WORLD_TO_CHUNK(z);
-    return c->blocks[block_x][y][block_z];
+    else
+        return w->chunks[chunk_x * WORLD_SIZE + chunk_z].blocks[WORLD_TO_CHUNK(x)][y][WORLD_TO_CHUNK(z)];
 }
 
 void world_set_block(struct World *w, int x, int y, int z, block_id new_block)
 {
-    const int max = WORLD_SIZE / 2;
-
-    if (x < -max || x >= max || z < -max || z >= max)
+    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
+    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
+    if (!(chunk_x < 0 || chunk_x >= WORLD_SIZE || chunk_z < 0 || chunk_z >= WORLD_SIZE || y < 0 || y >= WORLD_HEIGHT))
     {
-        return;
-    }
+        struct Chunk *c = &w->chunks[chunk_x * WORLD_SIZE + chunk_z];
 
-    x += max; z += max;
-    struct Chunk* c = &w->chunks[x * WORLD_SIZE + z];
+        size_t block_x = WORLD_TO_CHUNK(x);
+        size_t block_z = WORLD_TO_CHUNK(z);
+        block_id *b = &c->blocks[block_x][y][block_z];
 
-    size_t block_x = WORLD_TO_CHUNK(x);
-    size_t block_z = WORLD_TO_CHUNK(z);
-    block_id *b = &c->blocks[block_x][y][block_z];
-
-    if (*b != new_block)
-    {
-        *b = new_block;
-        if (block_x == 0) w->chunks[(x == 0 ? x : x - 1) * WORLD_SIZE + z].dirty = 1;
-        else if (block_x == CHUNK_SIZE - 1) w->chunks[(x == WORLD_SIZE - 1 ? x : x + 1) * WORLD_SIZE + z].dirty = 1;
-        if (block_z == 0) w->chunks[x * WORLD_SIZE + (z == 0 ? z : z - 1)].dirty = 1;
-        else if (block_z == CHUNK_SIZE - 1) w->chunks[x * WORLD_SIZE + (z == WORLD_SIZE - 1 ? z : z + 1)].dirty = 1;
-        c->dirty = 1;
+        if(*b != new_block) {
+            *b = new_block;
+            if (block_x == 0) w->chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * WORLD_SIZE + chunk_z].dirty = 1;
+            else if (block_x == CHUNK_SIZE - 1) w->chunks[(chunk_x == WORLD_SIZE - 1 ? chunk_x : chunk_x + 1) * WORLD_SIZE + chunk_z].dirty = 1;
+            if (block_z == 0) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
+            else if (block_z == CHUNK_SIZE - 1) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == WORLD_SIZE - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
+            c->dirty = 1;
+        }
     }
 }
 
 // world_get_chunk
-struct Chunk* world_get_chunk(struct World *w, int x, int z)
+struct Chunk *world_get_chunk(struct World *w, int x, int z)
 {
     const int max = WORLD_SIZE / 2;
 
@@ -559,6 +567,7 @@ struct Chunk* world_get_chunk(struct World *w, int x, int z)
         return NULL;
     }
 
-    x += max; z += max;
+    x += max;
+    z += max;
     return &w->chunks[x * WORLD_SIZE + z];
 }
