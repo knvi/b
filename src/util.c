@@ -93,7 +93,7 @@ void load_png_texture(const char *file_name)
     free(data);
 }
 
-// Fixing a weird error
+// Fixes a linker error
 int max(int n1, int n2) {
     return (n1 > n2 ? n1 : n2);
 }
