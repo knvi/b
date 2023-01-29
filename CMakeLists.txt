@@ -18,6 +18,7 @@ add_executable(
     src/noise.c
     src/main.c
     src/worldgen.c
+    src/win32time.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c
     deps/noise/noise1234.c
@@ -27,6 +28,7 @@ add_executable(
     bserver
     src/server/server.c
     src/server/main.c
+    src/win32time.c
     deps/miniz/miniz.c)
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)

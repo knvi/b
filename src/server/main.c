@@ -1,10 +1,10 @@
 #include "server.h"
 
-#include <sys/time.h>
+
+#include "time.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 int main(int argc, char **argv) {
     printf("b server\n");
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 
     server_init(&s, port);
 
-    struct timeval current_tv;
+    struct timeval current_tv = { .tv_sec = 0, .tv_usec = 0 };
     gettimeofday(&current_tv, NULL);
 
     unsigned int last_time = 0;
