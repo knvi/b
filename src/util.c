@@ -92,8 +92,3 @@ void load_png_texture(const char *file_name)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) width, (GLsizei) height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     free(data);
 }
-
-// Fixes a linker error
-int max(int n1, int n2) {
-    return (n1 > n2 ? n1 : n2);
-}

@@ -10,6 +10,7 @@
         "limits": "c",
         "numeric": "c",
         "semaphore": "c",
-        "valarray": "c"
+        "valarray": "c",
+        "noise1234.h": "c"
     }
 }
