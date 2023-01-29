@@ -227,3 +227,7 @@ void v3_lerp(vec3* v, vec3 *a, vec3 *b, float t) {
     v->y = lerp(a->y, b->y, t);
     v->z = lerp(a->z, b->z, t);
 }
+
+int max(int a, int b) {
+    return (a > b ? a : b);
+}

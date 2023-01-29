@@ -1,5 +1,6 @@
 #include "worldgen.h"
 #include "noise.h"
+#include "mvmath.h"
 
 enum Biome
 {
