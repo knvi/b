@@ -114,7 +114,9 @@ int main(int argc, char **argv)
 
         if (delta_time < frame_interval && !first_frame)
         {
-#ifndef _WIN32
+#ifdef _WIN32
+            Sleep(frame_interval * 1000 - delta_time * 1000);
+#else
             usleep(frame_interval * 1000000 - delta_time * 1000000);
 #endif
             current_time = glfwGetTime();
