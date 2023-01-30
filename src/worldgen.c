@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "worldgen.h"
 #include "noise.h"
 #include "mvmath.h"
