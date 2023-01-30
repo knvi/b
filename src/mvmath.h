@@ -27,13 +27,19 @@ typedef struct
 typedef struct
 {
     float x;
-    float y;
+    union {
+        float y;
+        float z;
+    };
 } vec2;
 
 typedef struct
 {
     int x;
-    int y;
+    union {
+        int y;
+        int z;
+    };
 } ivec2;
 
 #define VEC3S2V(v) (vec3){v.x, v.y, v.z}
