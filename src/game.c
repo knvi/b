@@ -1,4 +1,5 @@
 #include "game.h"
+#include "GLFW/glfw3.h"
 #include "worldgen.h"
 
 #include <stdio.h>
@@ -56,8 +57,7 @@ int recv_all(SOCKET s, char *buf, size_t buf_size)
 void game_init(game *g, GLFWwindow *window)
 {
     g->window = window;
-    g->window_width = 1280.0f;
-    g->window_height = 720.0f;
+    glfwGetWindowSize(window, &g->window_width, &g->window_height);
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -307,8 +307,6 @@ void game_tick(game *g)
 
 void game_draw(game *g, double delta_time, double time_since_tick)
 {
-    glViewport(0, 0, g->window_width, g->window_height);
-
     char text[128];
     sprintf(text, "b\n%d fps\n", (int) roundf(1.0f / delta_time));
     if (g->w.noclip_mode)
