@@ -2,7 +2,7 @@
 #include <windows.h>
 
 void usleep(__int64 useconds) {
-	Sleep(useconds / 10);
+	Sleep(useconds / 1000);
 }
 
 /* gettimeofday() taken from PostgreSQL */
