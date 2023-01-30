@@ -111,6 +111,8 @@ void calculate_selected_block(struct World *w, float radius)
 
 void world_init(struct World *w)
 {
+    w->size.x = 32;
+    w->size.y = 32;
     w->player.box = (bounding_box){{0.6f, 1.8f, 0.6f}};
     w->player.position = (vec3){0.0f, WORLD_HEIGHT, 0.0f};
     w->player.velocity = (vec3){0.0f};
@@ -139,13 +141,13 @@ void world_init(struct World *w)
 
     w->chunk_data_buffer = malloc(36 * CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT * sizeof(block_vertex));
 
-    w->chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(struct Chunk));
+    w->chunks = malloc(w->size.x * w->size.y * sizeof(struct Chunk));
 
-    for (int x = 0; x < WORLD_SIZE; x++)
+    for (int x = 0; x < w->size.x; x++)
     {
-        for (int z = 0; z < WORLD_SIZE; z++)
+        for (int z = 0; z < w->size.y; z++)
         {
-            chunk_init(&w->chunks[x * WORLD_SIZE + z], w, x - WORLD_SIZE / 2, z - WORLD_SIZE / 2, &w->blocks_shader);
+            chunk_init(&w->chunks[x * w->size.y + z], w, x - w->size.x / 2, z - w->size.y / 2, &w->blocks_shader);
         }
     }
 
@@ -413,16 +415,16 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
         struct Chunk *chunk_to_update = NULL;
         float min_distance = -1.0f;
 
-        for (int x = 0; x < WORLD_SIZE; x++)
+        for (int x = 0; x < w->size.x; x++)
         {
-            for (int z = 0; z < WORLD_SIZE; z++)
+            for (int z = 0; z < w->size.y; z++)
             {
-                struct Chunk *c = &w->chunks[x * WORLD_SIZE + z];
+                struct Chunk *c = &w->chunks[x * w->size.y + z];
 
                 if (c->dirty)
                 {
-                    float distance_x = abs(x - CHUNK_FROM_WORLD_COORDS((int)roundf(w->player.position.x)));
-                    float distance_z = abs(z - CHUNK_FROM_WORLD_COORDS((int)roundf(w->player.position.z)));
+                    float distance_x = abs(x - CHUNK_FROM_WORLD_COORDS(w, (int)roundf(w->player.position.x)));
+                    float distance_z = abs(z - CHUNK_FROM_WORLD_COORDS(w, (int)roundf(w->player.position.z)));
                     float distance = sqrtf(distance_x * distance_x + distance_z * distance_z);
                     if (distance < min_distance || min_distance < 0.0f)
                     {
@@ -442,11 +444,11 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
             break;
     }
 
-    for (int x = -WORLD_SIZE / 2; x < WORLD_SIZE - WORLD_SIZE / 2; x++)
+    for (int x = -(w->size.x) / 2; x < (w->size.x) - (w->size.x) / 2; x++)
     {
-        for (int z = -WORLD_SIZE / 2; z < WORLD_SIZE - WORLD_SIZE / 2; z++)
+        for (int z = -(w->size.y) / 2; z < (w->size.y) - (w->size.y) / 2; z++)
         {
-            struct Chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
+            struct Chunk *c = &w->chunks[(x + (w->size.x) / 2) * w->size.y + z + w->size.y / 2];
             vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
             translate(&w->blocks_model, &chunk_translation);
             glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
@@ -491,11 +493,11 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
 
     glUseProgram(w->blocks_shader.program);
 
-    for (int x = -WORLD_SIZE / 2; x < WORLD_SIZE - WORLD_SIZE / 2; x++)
+    for (int x = -(w->size.x) / 2; x < (w->size.x) - (w->size.x) / 2; x++)
     {
-        for (int z = -WORLD_SIZE / 2; z < WORLD_SIZE - WORLD_SIZE / 2; z++)
+        for (int z = -(w->size.y) / 2; z < (w->size.y) - (w->size.y) / 2; z++)
         {
-            struct Chunk *c = &w->chunks[(x + WORLD_SIZE / 2) * WORLD_SIZE + z + WORLD_SIZE / 2];
+            struct Chunk *c = &w->chunks[(x + (w->size.x) / 2) * (w->size.y) + z + (w->size.y) / 2];
             vec3 chunk_translation = {x * CHUNK_SIZE, 0.0f, z * CHUNK_SIZE};
             translate(&w->blocks_model, &chunk_translation);
             glUniformMatrix4fv(w->blocks_shader.model_location, 1, GL_FALSE, w->blocks_model.value);
@@ -507,11 +509,11 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
 
 void world_destroy(struct World *w)
 {
-    for (int x = 0; x < WORLD_SIZE; x++)
+    for (int x = 0; x < (w->size.x); x++)
     {
-        for (int z = 0; z < WORLD_SIZE; z++)
+        for (int z = 0; z < (w->size.y); z++)
         {
-            chunk_destroy(&w->chunks[x * WORLD_SIZE + z]);
+            chunk_destroy(&w->chunks[x * (w->size.y) + z]);
         }
     }
     free(w->chunks);
@@ -526,21 +528,21 @@ void world_destroy(struct World *w)
 
 block_id world_get_block(struct World *w, int x, int y, int z)
 {
-    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
-    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
-    if (chunk_x < 0 || chunk_x >= WORLD_SIZE || chunk_z < 0 || chunk_z >= WORLD_SIZE || y < 0 || y >= WORLD_HEIGHT)
+    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(w, x);
+    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(w, z);
+    if (chunk_x < 0 || chunk_x >= w->size.x || chunk_z < 0 || chunk_z >= w->size.y || y < 0 || y >= WORLD_HEIGHT)
         return AIR;
     else
-        return w->chunks[chunk_x * WORLD_SIZE + chunk_z].blocks[WORLD_TO_CHUNK(x)][y][WORLD_TO_CHUNK(z)];
+        return w->chunks[chunk_x * w->size.y + chunk_z].blocks[WORLD_TO_CHUNK(x)][y][WORLD_TO_CHUNK(z)];
 }
 
 void world_set_block(struct World *w, int x, int y, int z, block_id new_block)
 {
-    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(x);
-    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(z);
-    if (!(chunk_x < 0 || chunk_x >= WORLD_SIZE || chunk_z < 0 || chunk_z >= WORLD_SIZE || y < 0 || y >= WORLD_HEIGHT))
+    size_t chunk_x = CHUNK_FROM_WORLD_COORDS(w, x);
+    size_t chunk_z = CHUNK_FROM_WORLD_COORDS(w, z);
+    if (!(chunk_x < 0 || chunk_x >= w->size.x || chunk_z < 0 || chunk_z >= w->size.y || y < 0 || y >= WORLD_HEIGHT))
     {
-        struct Chunk *c = &w->chunks[chunk_x * WORLD_SIZE + chunk_z];
+        struct Chunk *c = &w->chunks[chunk_x * w->size.y + chunk_z];
 
         size_t block_x = WORLD_TO_CHUNK(x);
         size_t block_z = WORLD_TO_CHUNK(z);
@@ -548,10 +550,10 @@ void world_set_block(struct World *w, int x, int y, int z, block_id new_block)
 
         if(*b != new_block) {
             *b = new_block;
-            if (block_x == 0) w->chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * WORLD_SIZE + chunk_z].dirty = 1;
-            else if (block_x == CHUNK_SIZE - 1) w->chunks[(chunk_x == WORLD_SIZE - 1 ? chunk_x : chunk_x + 1) * WORLD_SIZE + chunk_z].dirty = 1;
-            if (block_z == 0) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
-            else if (block_z == CHUNK_SIZE - 1) w->chunks[chunk_x * WORLD_SIZE + (chunk_z == WORLD_SIZE - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
+            if (block_x == 0) w->chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * w->size.y + chunk_z].dirty = 1;
+            else if (block_x == CHUNK_SIZE - 1) w->chunks[(chunk_x == w->size.x - 1 ? chunk_x : chunk_x + 1) * w->size.y + chunk_z].dirty = 1;
+            if (block_z == 0) w->chunks[chunk_x * w->size.y + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
+            else if (block_z == CHUNK_SIZE - 1) w->chunks[chunk_x * w->size.y + (chunk_z == w->size.y - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
             c->dirty = 1;
         }
     }
@@ -560,14 +562,15 @@ void world_set_block(struct World *w, int x, int y, int z, block_id new_block)
 // world_get_chunk
 struct Chunk *world_get_chunk(struct World *w, int x, int z)
 {
-    const int max = WORLD_SIZE / 2;
+    const int max_x = w->size.x / 2;
+    const int max_z = w->size.y / 2;
 
-    if (x < -max || x >= max || z < -max || z >= max)
+    if (x < -max_x || x >= max_x || z < -max_z || z >= max_z)
     {
         return NULL;
     }
 
-    x += max;
-    z += max;
-    return &w->chunks[x * WORLD_SIZE + z];
+    x += max_x;
+    z += max_z;
+    return &w->chunks[x * w->size.y + z];
 }

@@ -413,11 +413,11 @@ void worldgen_noise(struct Chunk *chunk)
 
 void worldgen_init(struct World *world)
 {
-    for (int x = 0; x < WORLD_SIZE; x++)
+    for (int x = 0; x < world->size.x; x++)
     {
-        for (int z = 0; z < WORLD_SIZE; z++)
+        for (int z = 0; z < world->size.y; z++)
         {
-            struct Chunk *c = &world->chunks[x * WORLD_SIZE + z];
+            struct Chunk *c = &world->chunks[x * world->size.y + z];
 
             // for (int x = 0; x < CHUNK_SIZE; x++)
             // {
@@ -442,4 +442,10 @@ void worldgen_init(struct World *world)
             worldgen_noise(c);
         }
     }
+}
+
+void worldgen_update(struct World *world, vec2 center) {
+    int x_chunks = center.x / CHUNK_SIZE;
+    int y_chunks = center.y / CHUNK_SIZE;
+    
 }

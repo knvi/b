@@ -244,9 +244,9 @@ void game_tick(game *g)
                                 packet->complete = ntohs(packet->complete);
                                 packet->length = ntohs(packet->length);
 
-                                size_t chunk_x = packet->x + WORLD_SIZE / 2;
-                                size_t chunk_z = packet->z + WORLD_SIZE / 2;
-                                struct Chunk *c = &g->w.chunks[chunk_x * WORLD_SIZE + chunk_z];
+                                size_t chunk_x = packet->x + g->w.size.x / 2;
+                                size_t chunk_z = packet->z + g->w.size.y / 2;
+                                struct Chunk *c = &g->w.chunks[chunk_x * g->w.size.y + chunk_z];
 
                                 g->inf_stream.zalloc = Z_NULL;
                                 g->inf_stream.zfree = Z_NULL;
@@ -264,10 +264,10 @@ void game_tick(game *g)
                                 if (packet->complete + packet->length == CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE)
                                 {
                                     c->dirty = 1;
-                                    g->w.chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * WORLD_SIZE + chunk_z].dirty = 1;
-                                    g->w.chunks[(chunk_x == WORLD_SIZE - 1 ? chunk_x : chunk_x + 1) * WORLD_SIZE + chunk_z].dirty = 1;
-                                    g->w.chunks[chunk_x * WORLD_SIZE + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
-                                    g->w.chunks[chunk_x * WORLD_SIZE + (chunk_z == WORLD_SIZE - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
+                                    g->w.chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * g->w.size.y + chunk_z].dirty = 1;
+                                    g->w.chunks[(chunk_x == g->w.size.x - 1 ? chunk_x : chunk_x + 1) * g->w.size.y + chunk_z].dirty = 1;
+                                    g->w.chunks[chunk_x * g->w.size.y + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
+                                    g->w.chunks[chunk_x * g->w.size.y + (chunk_z == g->w.size.y - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
                                 }
 
                                 data_position += sizeof(chunk_data_packet);
