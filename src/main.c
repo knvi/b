@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "time_crossplatform.h"
+
 #define FPS 120.0
 
 int main(int argc, char **argv)
@@ -41,7 +43,11 @@ int main(int argc, char **argv)
 
     g.server_addr.sin_port = htons(25565);
     g.online = 0;
+#ifdef _WIN32
+    strcpy_s(g.player_nickname, sizeof("Unnamed"), "Unnamed");
+#else
     strcpy(g.player_nickname, "Unnamed");
+#endif
 
     glfwSetWindowUserPointer(window, &i);
 
@@ -56,9 +62,8 @@ int main(int argc, char **argv)
         {
             if (strcmp(argv[i], "--ip") == 0)
             {
-                struct addrinfo hints, *res;
+                struct addrinfo hints = {0}, *res;
 
-                memset (&hints, 0, sizeof (hints));
                 hints.ai_family = AF_UNSPEC;
                 hints.ai_socktype = SOCK_STREAM;
                 hints.ai_protocol = IPPROTO_TCP;
@@ -109,7 +114,7 @@ int main(int argc, char **argv)
 
         if (delta_time < frame_interval && !first_frame)
         {
-            usleep(frame_interval * 1000000 - delta_time * 1000000);
+           // usleep(frame_interval * 1000000 - delta_time * 1000000);
             current_time = glfwGetTime();
             delta_time = current_time - last_time;
         }

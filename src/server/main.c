@@ -1,7 +1,7 @@
 #include "server.h"
 
 
-#include "time.h"
+#include "../time_crossplatform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

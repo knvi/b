@@ -1,6 +1,6 @@
 #ifdef _WIN32
-#ifndef WIN32TIME_H
-#define WIN32TIME_H
+#ifndef TIME_CROSSPLATFORM_H
+#define TIME_CROSSPLATFORM_H
 #include <sys/utime.h>
 void usleep(unsigned useconds);
 void gettimeofday(struct timeval* tp, struct timezone* tzp);
