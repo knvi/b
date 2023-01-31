@@ -176,7 +176,16 @@ void world_generate_new_chunks(struct World* w, int new_x, int new_z)
 {
     int current_chunks = w->size.x * w->size.z;
     int new_chunks = (w->size.x + new_x) * (w->size.z + new_z);
-    w->chunks = realloc(w->chunks, new_chunks * sizeof(struct Chunk));
+
+    struct Chunk* p_old_chunks = w->chunks;
+    w->chunks = calloc(new_chunks, sizeof(struct Chunk));
+#ifdef _WIN32
+    memcpy_s(w->chunks, new_chunks * sizeof(struct Chunk), p_old_chunks, current_chunks * sizeof(struct Chunk));
+#else
+    memcpy(w->chunks, p_old_chunks, current_chunks * sizeof(struct Chunk));
+#endif
+    free(p_old_chunks);
+
     assert(w->chunks != NULL);
     struct Chunk* chunk = w->chunks + current_chunks;
     struct Chunk* end = w->chunks + new_chunks;
