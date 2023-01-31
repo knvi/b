@@ -217,6 +217,11 @@ void world_check_chunk_generation(struct World* w)
     }
 }
 
+void world_check_chunk_management(struct World* w)
+{
+	
+}
+
 void world_handle_input(struct World *w, input *i)
 {
     w->window_width = i->window_width;

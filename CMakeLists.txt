@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 
 project(b C)
 
+set(common_SOURCES )
+if(WIN32)
+    list(APPEND common_SOURCES "src/threading_win32.c")
+else()
+    list(APPEND common_SOURCES "src/threading_posix.c")
+endif()
+
 add_executable(
     b
     src/mvmath.c
@@ -22,14 +29,14 @@ add_executable(
     deps/glad/src/glad.c
     deps/miniz/miniz.c
     deps/noise/noise1234.c
-    deps/lodepng/lodepng.c)
+    deps/lodepng/lodepng.c ${common_SOURCES})
 
 add_executable(
     bserver
     src/server/server.c
     src/server/main.c
     src/win32time.c
-    deps/miniz/miniz.c)
+    deps/miniz/miniz.c ${common_SOURCES})
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
