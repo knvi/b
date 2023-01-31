@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include "threading.h"
 
 #define HEAP_FLAGS (HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS)
@@ -45,3 +46,4 @@ void close_threads()
 {
 		
 }
+#endif

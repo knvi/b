@@ -29,6 +29,7 @@ struct World
     ivec2 size;
 
     struct Chunk *chunks;
+    int generating_chunks;
 
     float window_width;
     float window_height;

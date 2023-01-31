@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(b C)
-
-set(common_SOURCES )
-if(WIN32)
-    list(APPEND common_SOURCES "src/threading_win32.c")
-else()
-    list(APPEND common_SOURCES "src/threading_posix.c")
-endif()
-
 add_executable(
     b
     src/mvmath.c
@@ -25,11 +17,14 @@ add_executable(
     src/noise.c
     src/main.c
     src/worldgen.c
+    src/chunkgen.c
     src/win32time.c
+    src/threading_posix.c
+    src/threading_win32.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c
     deps/noise/noise1234.c
-    deps/lodepng/lodepng.c ${common_SOURCES})
+    deps/lodepng/lodepng.c)
 
 add_executable(
     bserver

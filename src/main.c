@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "threading.h"
 #include "time_crossplatform.h"
 
 #define FPS 120.0
@@ -144,6 +145,8 @@ int main(int argc, char **argv)
     #ifdef _WIN32
         WSACleanup();
     #endif
+
+    close_threads();
 
     return 0;
 }
