@@ -44,6 +44,12 @@ LPHANDLE start_thread(ThreadHandler fn, LPVOID data)
 
 void close_threads()
 {
-		
+	WaitForMultipleObjects(nThreads, hThreadArray, TRUE, INFINITE);
+	for(int i = 0; i < nThreads; i++)
+	{
+		CloseHandle(hThreadArray[i]);
+	}
+	HeapFree(GetProcessHeap(), 0, hThreadArray);
+	HeapFree(GetProcessHeap(), 0, dwThreadIdArray);
 }
 #endif

@@ -31,7 +31,7 @@ add_executable(
     src/server/server.c
     src/server/main.c
     src/win32time.c
-    deps/miniz/miniz.c ${common_SOURCES})
+    deps/miniz/miniz.c)
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
@@ -47,6 +47,7 @@ include_directories(deps/lodepng)
 if(WIN32)
     target_link_libraries(b wsock32 ws2_32 opengl32)
     target_link_libraries(bserver wsock32 ws2_32)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 elseif(APPLE)
     target_link_libraries(b
         "-framework Cocoa"

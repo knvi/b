@@ -1,5 +1,6 @@
 #ifdef _WIN32
 #include <windows.h>
+#include <winsock2.h>
 
 void usleep(__int64 useconds) {
 	Sleep(useconds / 1000);
@@ -33,7 +34,6 @@ void usleep(__int64 useconds) {
  * IS" BASIS, AND THE AUTHOR HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE,
  * SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
-#include <windows.h>
 
 
  /* FILETIME of Jan 1 1970 00:00:00. */

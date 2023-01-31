@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "threading.h"
@@ -25,7 +24,7 @@ void world_generate_new_chunks(struct World* w, int new_x, int new_z)
     struct Chunk* end = w->chunks + new_chunks;
     while (chunk < end) {
         chunk_init(chunk, w, (chunk - w->chunks) / w->size.z, (chunk - w->chunks) % w->size.z, &w->blocks_shader);
-        start_thread(worldgen_noise, chunk);
+        start_thread((ThreadHandler*)worldgen_noise, chunk);
 
         chunk++;
     }
