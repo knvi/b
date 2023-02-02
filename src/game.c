@@ -1,4 +1,5 @@
 #include "game.h"
+#include "GLFW/glfw3.h"
 #include "worldgen.h"
 
 #include <stdio.h>
@@ -56,8 +57,7 @@ int recv_all(SOCKET s, char *buf, size_t buf_size)
 void game_init(game *g, GLFWwindow *window)
 {
     g->window = window;
-    g->window_width = 1280.0f;
-    g->window_height = 720.0f;
+    glfwGetWindowSize(window, &g->window_width, &g->window_height);
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -244,9 +244,9 @@ void game_tick(game *g)
                                 packet->complete = ntohs(packet->complete);
                                 packet->length = ntohs(packet->length);
 
-                                size_t chunk_x = packet->x + WORLD_SIZE / 2;
-                                size_t chunk_z = packet->z + WORLD_SIZE / 2;
-                                struct Chunk *c = &g->w.chunks[chunk_x * WORLD_SIZE + chunk_z];
+                                size_t chunk_x = packet->x + g->w.size.x / 2;
+                                size_t chunk_z = packet->z + g->w.size.y / 2;
+                                struct Chunk *c = &g->w.chunks[chunk_x * g->w.size.y + chunk_z];
 
                                 g->inf_stream.zalloc = Z_NULL;
                                 g->inf_stream.zfree = Z_NULL;
@@ -264,10 +264,10 @@ void game_tick(game *g)
                                 if (packet->complete + packet->length == CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE)
                                 {
                                     c->dirty = 1;
-                                    g->w.chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * WORLD_SIZE + chunk_z].dirty = 1;
-                                    g->w.chunks[(chunk_x == WORLD_SIZE - 1 ? chunk_x : chunk_x + 1) * WORLD_SIZE + chunk_z].dirty = 1;
-                                    g->w.chunks[chunk_x * WORLD_SIZE + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
-                                    g->w.chunks[chunk_x * WORLD_SIZE + (chunk_z == WORLD_SIZE - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
+                                    g->w.chunks[(chunk_x == 0 ? chunk_x : chunk_x - 1) * g->w.size.y + chunk_z].dirty = 1;
+                                    g->w.chunks[(chunk_x == g->w.size.x - 1 ? chunk_x : chunk_x + 1) * g->w.size.y + chunk_z].dirty = 1;
+                                    g->w.chunks[chunk_x * g->w.size.y + (chunk_z == 0 ? chunk_z : chunk_z - 1)].dirty = 1;
+                                    g->w.chunks[chunk_x * g->w.size.y + (chunk_z == g->w.size.y - 1 ? chunk_z : chunk_z + 1)].dirty = 1;
                                 }
 
                                 data_position += sizeof(chunk_data_packet);
@@ -307,8 +307,6 @@ void game_tick(game *g)
 
 void game_draw(game *g, double delta_time, double time_since_tick)
 {
-    glViewport(0, 0, g->window_width, g->window_height);
-
     char text[128];
     sprintf(text, "b\n%d fps\n", (int) roundf(1.0f / delta_time));
     if (g->w.noclip_mode)

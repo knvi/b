@@ -27,13 +27,19 @@ typedef struct
 typedef struct
 {
     float x;
-    float y;
+    union {
+        float y;
+        float z;
+    };
 } vec2;
 
 typedef struct
 {
     int x;
-    int y;
+    union {
+        int y;
+        int z;
+    };
 } ivec2;
 
 #define VEC3S2V(v) (vec3){v.x, v.y, v.z}
@@ -78,6 +84,6 @@ void ortho(mat4 *m, float left, float right, float bottom, float top, float near
 float lerp(float a, float b, float t);
 void v3_lerp(vec3 *v, vec3 *a, vec3 *b, float t);
 
-int max(int a, int b);
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #endif

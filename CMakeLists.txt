@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(b C)
-
 add_executable(
     b
     src/mvmath.c
@@ -18,6 +17,10 @@ add_executable(
     src/noise.c
     src/main.c
     src/worldgen.c
+    src/chunkgen.c
+    src/win32time.c
+    src/threading_posix.c
+    src/threading_win32.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c
     deps/noise/noise1234.c
@@ -27,6 +30,7 @@ add_executable(
     bserver
     src/server/server.c
     src/server/main.c
+    src/win32time.c
     deps/miniz/miniz.c)
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
@@ -43,6 +47,7 @@ include_directories(deps/lodepng)
 if(WIN32)
     target_link_libraries(b wsock32 ws2_32 opengl32)
     target_link_libraries(bserver wsock32 ws2_32)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 elseif(APPLE)
     target_link_libraries(b
         "-framework Cocoa"
