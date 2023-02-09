@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "worldgen.h"
 #include "noise.h"
 #include "mvmath.h"
@@ -225,6 +227,7 @@ int hash(int x, int y, int z)
 // Generate chunk block positions using noise
 void worldgen_noise(struct Chunk *chunk)
 {
+    memset(chunk->blocks, AIR, sizeof(chunk->blocks));
     SRAND(chunk->world->seed + hash(chunk->x, 1, chunk->z));
 
     // Base noise
@@ -306,7 +309,7 @@ void worldgen_noise(struct Chunk *chunk)
 
             s32 d = r * 1.4f + 5.0f; // dirt or sand depth
 
-            block_id top_block;
+            block_id top_block = AIR;
             switch (biome)
             {
             case OCEAN:
