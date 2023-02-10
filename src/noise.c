@@ -1,4 +1,5 @@
 #include "noise.h"
+#include "string.h"
 
 
 f32 octave_compute(struct Octave *p, f32 seed, f32 x, f32 z) {
