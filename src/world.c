@@ -137,6 +137,8 @@ void world_init(struct World *w)
     w->lines_shader.view_location = glGetUniformLocation(w->lines_shader.program, "view");
     w->lines_shader.projection_location = glGetUniformLocation(w->lines_shader.program, "projection");
 
+    sky_init(&w->sky);
+
     w->chunk_data_buffer = malloc(36 * CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT * sizeof(block_vertex));
 
     w->chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(struct Chunk));
@@ -283,6 +285,8 @@ void world_handle_input(struct World *w, input *i)
 
 void world_tick(struct World *w)
 {
+    sky_tick(&w->sky);
+
     if (w->fly_mode)
     {
         w->player.velocity.x *= 0.85f;
@@ -387,7 +391,7 @@ void world_draw(struct World *w, double delta_time, double time_since_tick)
 
     calculate_selected_block(w, 5.0f);
 
-    glClearColor(0.6f, 0.7f, 1.0f, 1.0f);
+    sky_render(&w->sky);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);

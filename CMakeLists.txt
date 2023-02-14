@@ -17,6 +17,7 @@ add_executable(
     src/input.c
     src/noise.c
     src/main.c
+    src/sky.c
     src/worldgen.c
     deps/glad/src/glad.c
     deps/miniz/miniz.c

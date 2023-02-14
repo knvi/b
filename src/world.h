@@ -7,6 +7,7 @@
 #include "shader.h"
 #include "sockets.h"
 #include "noise.h"
+#include "sky.h"
 
 #define WORLD_SIZE 32
 #define ULONG_MAX 0xFFFFFFFFUL
@@ -38,6 +39,7 @@ struct World
     int noclip_mode;
 
     uint64_t seed;
+    struct Sky sky;
 
     vec3 camera_position;
     vec2 camera_rotation;
