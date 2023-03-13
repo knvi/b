@@ -2,6 +2,8 @@
 
 ![image](screenshot.png)
 
+this project is originated from knicked's [CCraft](https://github.com/knicked/CCraft)
+
 # WARNING
 glfw is used as a submodule here, please run `git submodule update --init` after cloning to get glfw.
 
